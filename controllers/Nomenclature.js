@@ -1,0 +1,201 @@
+import Nomenclature from "../models/nomenclatureModel.js";
+import ItemBatch from '../models/itemsBatchModel.js';
+import ItemCheck from '../models/itemsCheckModel.js'
+import { Op } from "sequelize";
+ 
+export const nomenclatureFilter = async (req, res) => {
+    try {
+        const whereConditions = {};
+        if (req.body.name) {
+            whereConditions.name = {
+                    [Op.like]: `%${req.body.name}%`
+                };
+        }
+        if (req.body.brand) {
+                whereConditions.brand = {
+                        [Op.like]: `%${req.body.brand}%`
+                    };
+        }
+        if (req.body.productType) {
+                whereConditions.productType = {
+                        [Op.like]: `%${req.body.productType}%`
+                    };
+        }
+        if (req.body.productModel) {
+                whereConditions.productModel = {
+                        [Op.like]: `%${req.body.productModel}%`
+                    };
+        }
+        if (req.body.remainsMin) {
+                whereConditions.remains = {
+                    [Op.gt]: req.body.remainsMin
+                };
+            }
+        if (req.body.remainsMax) {
+                whereConditions.remains = {
+                    [Op.lt]: req.body.remainsMax
+                };
+            }
+        if (req.body.remainsSumMin) {
+                whereConditions.remainsSum = {
+                    [Op.gt]: req.body.remainsSumMin
+                };
+            }
+        if (req.body.remainsSumMax) {
+                whereConditions.remainsSum = {
+                    [Op.lt]: req.body.remainsSumMax
+                };
+            }
+        if (req.body.searchText) {
+            whereConditions[Op.or] = [
+                { name: { [Op.like]: `%${req.body.searchText}%`} },
+                { brand: { [Op.like]: `%${req.body.searchText}%` } }
+            ];
+        }
+        const orderBy = [];
+        if (req.query.sort) {
+            const sortParams = req.query.sort.split('&');
+            sortParams.forEach(param => {
+                const [fieldname, order] = param.split(',');
+                if (fieldname && order) {
+                    orderBy.push([fieldname, order]);
+                }
+            });
+        }
+        const page = parseInt(req.query.page) || 0; // Номер страницы (по умолчанию 0)
+        const size = parseInt(req.query.size) || 10; // Размер страницы (по умолчанию 10)
+        
+        const { count, rows } = await Nomenclature.findAndCountAll({
+            where: whereConditions,
+            order: orderBy.length ? orderBy : null,
+            limit: size,
+            offset: page * size,
+        });
+
+        for (const nomenclature of rows) {
+            if (nomenclature.hasSerialNumber) {
+                // Получение количества записей в items_batch с заполненным serialNumber и isSaled === false
+                const count = await ItemBatch.count({
+                    where: {
+                        itemId: nomenclature.itemId,
+                        serialNumber: { [Op.ne]: null },
+                        isSaled: false || null
+                    }
+                });
+                nomenclature.remains = count;
+
+            } else {
+                // Получение суммы remainder у записей с таким же itemId
+                const totalRemainder = await ItemBatch.sum('remainder', {
+                    where: { itemId: nomenclature.itemId }
+                });
+                nomenclature.remains = totalRemainder || 0;
+            }
+        }
+
+        
+        // Формируем ответ в формате TPageableResponse
+        const response = {
+            content: rows,
+            pageable: {
+                sort: orderBy.length ? orderBy : null,
+                pageNumber: page,
+                pageSize: size,
+                paged: true,
+                unpaged: false,
+            },
+            dataHide: false,
+            empty: rows.length === 0,
+            first: page === 0,
+            last: page >= Math.ceil(count / size) - 1,
+            number: page,
+            numberOfElements: rows.length,
+            size: size,
+            sort: orderBy.length ? orderBy : null,
+            totalElements: count,
+            totalPages: Math.ceil(count / size),
+        };
+    res.json(response);
+
+    } catch (error) {
+        res.json({ message: error.message });
+    }  
+}
+
+export const getNomenclatureAll = async (req, res) => {
+    try {
+        const response = await Nomenclature.findAll({
+        });
+        res.json(response);
+    } catch (error) {
+        res.json({ message: error.message });
+    }  
+}
+
+
+export const getNomenclatureById = async (req, res) => {
+        try {
+            const nomenclature = await Nomenclature.findAll({
+                where: {
+                    itemId: req.params.itemId
+                }
+            });
+            res.json(nomenclature[0]);
+        } catch (error) {
+            res.json({ message: error.message });
+        }  
+    }
+
+//     export const getNomenclatureBySearchText = async (req, res) => {
+//         try {
+//             const nomenclatures = await Nomenclature.findAll({
+//                 where: {
+//                     name: req.params.name
+//                 } 
+//             });
+//             res.json(nomenclatures);
+//         } catch (error) {
+//             res.json({ message: error.message });
+//         }  
+//     }
+     
+    export const createNomenclature = async (req, res) => {
+        try {
+            await Nomenclature.create(req.body);
+            res.json({
+                "message": "Запись создана"
+            });
+        } catch (error) {
+            res.json({ message: error.message });
+        }  
+    }
+     
+    export const updateNomenclature = async (req, res) => {
+        try {
+            await Nomenclature.update(req.body, {
+                where: {
+                    itemId: req.params.itemId
+                }
+            });
+            res.json({
+                "message": "Запись успешно обновлена"
+            });
+        } catch (error) {
+            res.json({ message: error.message });
+        }  
+    }
+     
+    export const deleteNomenclature = async (req, res) => {
+        try {
+            await Nomenclature.destroy({
+                where: {
+                    itemId: req.params.itemId
+                }
+            });
+            res.json({
+                "message": "Nomenclature Deleted"
+            });
+        } catch (error) {
+            res.json({ message: error.message });
+        }  
+    }
