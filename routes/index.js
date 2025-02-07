@@ -18,7 +18,7 @@ import { getAllDelivers } from "../controllers/Delivers.js";
 import { createItemsCheck, getAllItemsCheck, getItemsCheckById, getItemsCheckBySerial, getItemsCheckToReturn, restoreItemsCheck } from "../controllers/ItemsCheck.js";
 import { getAllContractors } from "../controllers/Contractors.js";
 import { accountingFilter, createAccounting, deleteAccounting, getAccountingById, updateAccounting } from "../controllers/Accountings.js";
-import { deleteAccount, deleteCategory, deleteContractor, deleteDeliver, deleteUser, deleteWarehouse, getAllAccounts, getAllCategories, getAllUsers, getAllWarehouses, updateAccounts, updateCategories, updateContractors, updateDelivers, updateUsers, updateWarehouses } from "../controllers/Settings.js";
+import { deleteAccount, deleteCategory, deleteContractor, deleteCurrency, deleteDeliver, deleteUser, deleteWarehouse, getAllAccounts, getAllCategories, getAllCurrencies, getAllUsers, getAllWarehouses, updateAccounts, updateCategories, updateContractors, updateCurrencies, updateDelivers, updateUsers, updateWarehouses } from "../controllers/Settings.js";
  
 const router = express.Router();
 
@@ -115,5 +115,9 @@ router.delete('/api/delete-deliver/:deliverId', authenticateToken, deleteDeliver
 router.get('/api/warehouses/all', authenticateToken, getAllWarehouses);
 router.post('/api/update-warehouses', authenticateToken, updateWarehouses);
 router.delete('/api/delete-warehouse/:warehouseId', authenticateToken, deleteWarehouse);
+
+router.get('/api/currencies/all', authenticateToken, getAllCurrencies);
+router.post('/api/update-currencies', authenticateToken, updateCurrencies);
+router.delete('/api/delete-currency/:id', authenticateToken, deleteCurrency);
 
 export default router;

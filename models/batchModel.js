@@ -35,6 +35,9 @@ const Batch = db.define('batches',{
     },
     insurance:{
         type: DataTypes.INTEGER
+    },
+    rate:{
+        type: DataTypes.INTEGER
     }
 },{
     freezeTableName: true

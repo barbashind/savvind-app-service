@@ -1,6 +1,6 @@
 import Contractor from "../models/contractorsModel.js";
 import Deliver from "../models/deliversModel.js";
-import Users, { Accounts, Categories, Warehouses } from "../models/settingsModel.js";
+import Users, { Accounts, Categories, Currencies, Warehouses } from "../models/settingsModel.js";
 
 export const getAllAccounts = async (req, res) => {
     try {
@@ -333,6 +333,65 @@ export const deleteDeliver = async (req, res) => {
         });
         res.json({
             "message": "Accounting Deleted"
+        });
+    } catch (error) {
+        res.json({ message: error.message });
+    }  
+}
+
+export const getAllCurrencies = async (req, res) => {
+    try {
+        const accounts = await Currencies.findAll();
+        res.json(accounts);
+    } catch (error) {
+        res.json({ message: error.message });
+    }  
+}
+ 
+export const updateCurrencies = async (req, res) => {
+    try {
+        const errors = [];
+
+        // Проверяем на наличие ошибок
+        if (errors.length > 0) {
+            return res.status(400).json({ errors: errors });
+        }
+
+        // Обрабатываем каждую запись в теле запроса
+        const accounts = req.body;
+
+        for (const account of accounts) {
+            if (account.id) {
+                // Обновляем существующую запись
+                await Currencies.update(account, { where: { id: account.id } });
+            } else {
+                // Создаем новую запись
+                await Currencies.create(account);
+            }
+        }
+
+        // Получаем все актуальные записи из БД
+        const allAccounts = await Currencies.findAll();
+        
+        res.json({
+            allAccounts
+        });
+    } catch (error) {
+        res.json({ message: error.message });
+    }  
+}
+ 
+
+ 
+export const deleteCurrency = async (req, res) => {
+    try {
+        await Currencies.destroy({
+            where: {
+                id: req.params.id
+            }
+        });
+        res.json({
+            "message": "Currency Deleted"
         });
     } catch (error) {
         res.json({ message: error.message });

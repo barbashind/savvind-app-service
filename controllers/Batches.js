@@ -157,19 +157,21 @@ export const createBatch = async (req, res) => {
             // Проверка на пустое значение itemId
             if (!item.itemId) {
                 errors.push({ state: 'itemId', caption: `Выберите товар`, index: index });
-            }
+            } else
 
             // Проверка на пустое значение quant
             if (item.quant === undefined || item.quant === null || item.quant <= 0) {
                 errors.push({ state: 'quant', caption: `Укажите кол-во`, index: index  });
-            }
-
-            // Проверка на дублирование itemId
-            if (itemIds.has(item.itemId)) {
-                errors.push({ state: 'itemId', caption: `Товар дублируется`, index: index });
             } else {
                 itemIds.add(item.itemId);
             }
+
+            // // Проверка на дублирование itemId
+            // if (itemIds.has(item.itemId)) {
+            //     errors.push({ state: 'itemId', caption: `Товар дублируется`, index: index });
+            // } else {
+            //     itemIds.add(item.itemId);
+            // }
         });
 
         // Если есть ошибки, возвращаем их
@@ -202,13 +204,8 @@ export const updateBatch = async (req, res) => {
             }
 
             // Проверка на пустое значение quant
-            if (item.quant === undefined || item.quant === null || item.quant <= 0) {
+            else if (item.quant === undefined || item.quant === null || item.quant <= 0) {
                 errors.push({ state: 'quant', caption: `Укажите кол-во`, index: index  });
-            }
-
-            // Проверка на дублирование itemId
-            if (itemIds.has(item.itemId) && (!item.serialNumber)) {
-                errors.push({ state: 'itemId', caption: `Товар дублируется`, index: index });
             } else {
                 itemIds.add(item.itemId);
             }

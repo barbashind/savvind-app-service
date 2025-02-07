@@ -35,6 +35,9 @@ export const Accounts = db.define('accounts',{
     },
     value: {
         type: DataTypes.INTEGER
+    },
+    currency: {
+        type: DataTypes.STRING
     }
 },{
     freezeTableName: true
@@ -70,4 +73,17 @@ export const Warehouses = db.define('warehouses',{
     freezeTableName: true
 });
 
- 
+export const Currencies = db.define('currencies',{
+    
+    id :{
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },
+    currency :{
+        type: DataTypes.STRING
+    },
+
+},{
+    freezeTableName: true
+});

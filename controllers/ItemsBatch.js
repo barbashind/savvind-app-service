@@ -89,7 +89,7 @@ export const getItemsBatchFilter = async (req, res) => {
                     return elem
                 } else  {
                     return {
-                        remainder: rowsGr?.filter(el => (el.itemId === elem.itemId) && (el.batchId === elem.batchId) && el.serialNumber && !el.isSaled).length,
+                        remainder: rowsGr?.filter(el => (el.itemId === elem.itemId) && (el.partner === elem.partner) && (el.batchId === elem.batchId) && el.serialNumber && !el.isSaled).length,
                         name: elem.name,
                         itemBatchId: elem.itemBatchId,
                         warehouse: elem.warehouse,

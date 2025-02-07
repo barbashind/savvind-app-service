@@ -161,6 +161,11 @@ export const getNomenclatureById = async (req, res) => {
      
     export const createNomenclature = async (req, res) => {
         try {
+            if (!req.body.name) {
+                const error = { advice: 'name', statusText: `Введите наименование`, status: 0,  timestamp: '0'};
+                return res.status(400).json({ error });
+            }
+
             await Nomenclature.create(req.body);
             res.json({
                 "message": "Запись создана"
