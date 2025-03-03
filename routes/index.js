@@ -7,7 +7,8 @@ import {
         updateNomenclature,
         deleteNomenclature,
         nomenclatureFilter,
-        getNomenclatureAll
+        getNomenclatureAll,
+        getProductsFile
     } from "../controllers/Nomenclature.js";
 import { createProductType, deleteProductType, getAllProductTypes, getProductTypeByLabel, updateProductType } from "../controllers/ProductTypes.js";
 import { createBatch, deleteBatch, getBatchById, getBatchByNumber, purchaseFilter, updateBatch } from "../controllers/Batches.js";
@@ -43,6 +44,7 @@ router.post('/api/nomenclature/filter',authenticateToken, nomenclatureFilter);
 router.get('/api/nomenclature/all', authenticateToken, getNomenclatureAll);
 router.get('/api/nomenclature/:itemId', authenticateToken, getNomenclatureById);
 router.post('/api/create-nomenclature', authenticateToken, createNomenclature);
+router.post('/api/upload-nomenclature', authenticateToken, getProductsFile);
 router.post('/api/update-nomenclature/:itemId', authenticateToken, updateNomenclature);
 router.delete('/api/delete-nomenclature/:itemId', authenticateToken, deleteNomenclature);
 

@@ -2,6 +2,8 @@ import Nomenclature from "../models/nomenclatureModel.js";
 import ItemBatch from '../models/itemsBatchModel.js';
 import ItemCheck from '../models/itemsCheckModel.js'
 import { Op } from "sequelize";
+import multer from 'multer';
+import ExcelJS from 'exceljs'
  
 export const nomenclatureFilter = async (req, res) => {
     try {
@@ -91,6 +93,14 @@ export const nomenclatureFilter = async (req, res) => {
                 });
                 nomenclature.remains = totalRemainder || 0;
             }
+        }
+
+        if (orderBy.some(item => item[0] === 'remains')) {
+            rows.sort((a, b) => {
+                const aValue = a.remains || 0;
+                const bValue = b.remains || 0;
+                return orderBy.find(item => item[0] === 'remains')[1] === 'DESC' ? bValue - aValue : aValue - bValue;
+            });
         }
 
         
@@ -204,3 +214,81 @@ export const getNomenclatureById = async (req, res) => {
             res.json({ message: error.message });
         }  
     }
+
+    const storage = multer.diskStorage({
+        destination: (req, file, cb) => {
+            cb(null, '../uploads/'); // Путь к папке для сохранения
+        },
+        filename: (req, file, cb) => {
+            cb(null, Date.now() + path.extname(file.originalname)); // Уникальное имя для файла
+        }
+    });
+    
+    export const getProductsFile = async (req, res) => {
+    const upload = multer({ storage });
+        // Вызов middleware для загрузки файла
+        upload.single('file')(req, res, async () => {
+           
+                const workbook = new ExcelJS.Workbook();
+                await workbook.xlsx.read(req);
+                const worksheet = workbook.getWorksheet(1);
+    
+                // Перебираем строки в Excel файле
+                for (let rowNumber = 2; rowNumber <= worksheet.rowCount; rowNumber++) {
+                    const row = worksheet.getRow(rowNumber);
+    
+                    const name = row.getCell(1).value;
+                    const lastCostPrice = row.getCell(2).value;
+                    const weight = row.getCell(3).value;
+                    const productHeight = row.getCell(4).value;
+                    const productWidth = row.getCell(5).value;
+                    const isMessageActive = row.getCell(6).value;
+                    const productType = row.getCell(7).value;
+                    const brand = row.getCell(8).value;
+                    const productLength = row.getCell(9).value;
+                    const altName = row.getCell(10).value;
+                    const productColor = row.getCell(11).value;
+                    const productPrice = row.getCell(12).value;
+                    const printName = row.getCell(13).value;
+                    const productModel = row.getCell(14).value;
+                    const productMemory = row.getCell(15).value;
+                    const productCountry = row.getCell(16).value;
+                    const productSim = row.getCell(17).value;
+                    const hasSerialNumber = row.getCell(18).value;
+                    const EAN = row.getCell(19).value;
+                    const serialNumberStart = row.getCell(20).value;
+                    const stopWords = row.getCell(21).value;
+                    
+                    let warehouseProduct = null;
+    
+                    // Создаем новую запись
+                    warehouseProduct = await Nomenclature.create({ 
+                        name, 
+                        lastCostPrice, 
+                        weight, 
+                        productHeight, 
+                        productWidth,
+                        isMessageActive,
+                        productType,
+                        brand,
+                        productLength,
+                        altName,
+                        productColor,
+                        productPrice,
+                        printName,
+                        productModel,
+                        productMemory,
+                        productCountry,
+                        productSim,
+                        hasSerialNumber,
+                        EAN,
+                        serialNumberStart,
+                        stopWords
+                    });
+    
+                }
+    
+                res.send('File processed and data inserted successfully!');
+            
+        });
+    };

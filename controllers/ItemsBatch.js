@@ -1,6 +1,7 @@
 import ItemBatch from '../models/itemsBatchModel.js'
 import ItemBatchReg from '../models/itemsBatchRegModel.js';
 import { Op } from 'sequelize';
+import Nomenclature from '../models/nomenclatureModel.js';
  
 export const getItemsBatchByNumber = async (req, res) => {
     try {
@@ -177,6 +178,12 @@ export const createItemsBatch = async (req, res) => {
         
         // Создаем элементы партии
         const itemsBatches = await ItemBatch.bulkCreate(req.body);
+
+        for (const item of req.body) {
+            await Nomenclature.update({lastCostPrice: item.costPrice}, {where: {
+                itemId: item.itemId
+            }})
+        }
 
         // Если нет созданных элементов, возвращаем соответствующее сообщение
         if (itemsBatches.length === 0) {
