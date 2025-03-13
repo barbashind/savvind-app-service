@@ -201,7 +201,7 @@ export const createCheck = async (req, res) => {
         if ( !req.body.isBooking && !req.body.isUnpaid) {
         const accountingOfice = {
             accountFrom: null,
-                accountTo: 'Деньги в офисе',
+                accountTo: req.body.account,
                 value: req.body.summ,
                 category: 'Продажа товара',
                 form: null,
@@ -211,14 +211,14 @@ export const createCheck = async (req, res) => {
 
         const accountOffice = await Accounts.findOne({
                                 where: {
-                                   name: 'Деньги в офисе'
+                                   name: req.body.account
                                 }
                             });
         
         await Accounts.update({
             value: Number(accountOffice.value) + Number(req.body.summ)
         },{
-            where: { name: 'Деньги в офисе'}
+            where: { name: req.body.account}
         });
         }
 
@@ -270,7 +270,7 @@ export const updateCheck = async (req, res) => {
         if (req.body.isEnding) {
         const accountingOfice = {
             accountFrom: null,
-                accountTo: 'Деньги в офисе',
+                accountTo: req.body.account,
                 value: req.body.summ,
                 category: 'Продажа товара',
                 form: null,
@@ -279,13 +279,13 @@ export const updateCheck = async (req, res) => {
         await Accounting.create(accountingOfice)
         const accountOffice = await Accounts.findOne({
             where: {
-               name: 'Деньги в офисе'
+               name: req.body.account
             }
         });
         await Accounts.update({
         value: Number(accountOffice.value) + Number(req.body.summ)
         },{
-        where: { name: 'Деньги в офисе'}
+        where: { name: req.body.account}
         });
         }
         res.json({
@@ -312,14 +312,14 @@ export const deleteCheck = async (req, res) => {
 
         const accountOffice = await Accounts.findOne({
             where: {
-                name: 'Деньги в офисе'
+                name: req.body.account
             }
         })
         await Accounts.update({
             value: Number(accountOffice.value) - Number(check.summ)
         }, 
         { where: {
-            name: 'Деньги в офисе'
+            name: req.body.account
         }
         })
 

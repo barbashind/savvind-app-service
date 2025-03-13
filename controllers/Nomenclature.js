@@ -74,36 +74,6 @@ export const nomenclatureFilter = async (req, res) => {
             offset: page * size,
         });
 
-        for (const nomenclature of rows) {
-            if (nomenclature.hasSerialNumber) {
-                // Получение количества записей в items_batch с заполненным serialNumber и isSaled === false
-                const count = await ItemBatch.count({
-                    where: {
-                        itemId: nomenclature.itemId,
-                        serialNumber: { [Op.ne]: null },
-                        isSaled: false || null
-                    }
-                });
-                nomenclature.remains = count;
-
-            } else {
-                // Получение суммы remainder у записей с таким же itemId
-                const totalRemainder = await ItemBatch.sum('remainder', {
-                    where: { itemId: nomenclature.itemId }
-                });
-                nomenclature.remains = totalRemainder || 0;
-            }
-        }
-
-        if (orderBy.some(item => item[0] === 'remains')) {
-            rows.sort((a, b) => {
-                const aValue = a.remains || 0;
-                const bValue = b.remains || 0;
-                return orderBy.find(item => item[0] === 'remains')[1] === 'DESC' ? bValue - aValue : aValue - bValue;
-            });
-        }
-
-        
         // Формируем ответ в формате TPageableResponse
         const response = {
             content: rows,
@@ -142,15 +112,66 @@ export const getNomenclatureAll = async (req, res) => {
     }  
 }
 
+export const updateNomenclatureRemains = async (req, res) => {
+    try {
+        // Получаем все номенклатуры
+        const rows = await Nomenclature.findAll();
+
+        for (const nomenclature of rows) {
+                if (nomenclature.hasSerialNumber) {
+                    // Получение количества записей в items_batch с заполненным serialNumber и isSaled === false
+                    const count = await ItemBatch.count({
+                        where: {
+                            itemId: nomenclature.itemId,
+                            serialNumber: { [Op.ne]: null },
+                            isSaled: false || null
+                        }
+                    });
+                    nomenclature.remains = count;
+    
+                } else {
+                    // Получение суммы remainder у записей с таким же itemId
+                    const totalRemainder = await ItemBatch.sum('remainder', {
+                        where: { itemId: nomenclature.itemId }
+                    });
+                    nomenclature.remains = totalRemainder || 0;
+                }
+            
+
+            // Обновляем remainsSum в таблице Nomenclature
+            await Nomenclature.update(
+                { remainsSum: nomenclature.remains },
+                { where: { itemId: nomenclature.itemId } }
+            );
+        }
+        
+
+        res.json({ message: 'Остатки успешно обновлены' });
+
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 
 export const getNomenclatureById = async (req, res) => {
         try {
-            const nomenclature = await Nomenclature.findAll({
+            const nomenclature = await Nomenclature.findOne({
                 where: {
                     itemId: req.params.itemId
                 }
             });
-            res.json(nomenclature[0]);
+            const lastItemBatch = await ItemBatch.findOne({
+                where: {
+                    itemId: req.params.itemId
+                },
+                order: [['itemBatchId', 'DESC']] // Сортируем по itemBatchId в порядке убывания
+            });
+            const lastCostPriceAll = lastItemBatch.costPriceAll
+            res.json({
+                ...nomenclature.toJSON(), 
+                lastCostPriceAll
+            });
         } catch (error) {
             res.json({ message: error.message });
         }  

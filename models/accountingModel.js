@@ -31,6 +31,9 @@ const Accounting = db.define('accounting',{
     category:{
         type: DataTypes.STRING
     },
+    currency:{
+        type: DataTypes.STRING
+    },
     createdAt:{
         type: DataTypes.DATE
     },

@@ -261,8 +261,8 @@ export const restoreItemsCheck = async (req, res) => {
                             justification: checkItem.checkId.toString(),  accountFrom: null
                         }
                     });
-
-                    if (Number(accountingOffice.value) - Number(checkItem.salePrice) === 0) {
+                    if (accountingOffice) {
+                        if (Number(accountingOffice.value) - Number(checkItem.salePrice) === 0) {
                         await Accounting.destroy({
                             where: { justification: checkItem.checkId.toString(),  accountFrom: null}
                         });
@@ -273,6 +273,8 @@ export const restoreItemsCheck = async (req, res) => {
                             where: { justification: checkItem.checkId.toString(),  accountFrom: null}
                         });
                     }
+                    }
+                    
 
                     
 
@@ -282,7 +284,7 @@ export const restoreItemsCheck = async (req, res) => {
                         }
                     });
                     
-                    if (accounting) {
+                    if (accounting && checkItem.partner) {
                         if (Number(accounting.value) - Number(checkItem.salePrice) === 0) {
                             await Accounting.destroy({
                                 where: { justification: checkItem.checkId.toString(),  accountTo: null}
@@ -295,7 +297,7 @@ export const restoreItemsCheck = async (req, res) => {
                             });
                         }
                     }
-                    if (accounting) {
+                    if (accounting && checkItem.partner) {
                     const account = await Accounts.findOne({
                         where: {
                             name: accounting.accountFrom
@@ -311,14 +313,14 @@ export const restoreItemsCheck = async (req, res) => {
                     
                     const accountOffice = await Accounts.findOne({
                         where: {
-                           name: 'Деньги в офисе'
+                           name: check.account
                         }
                     });
                     if (accountOffice) {
                         await Accounts.update({
                         value: Number(accountOffice.value) - Number(checkItem.salePrice)
                         },{
-                            where: { name: 'Деньги в офисе'}
+                            where: { name: check.account}
                         });
                         }
 
@@ -380,14 +382,14 @@ export const restoreItemsCheck = async (req, res) => {
 
                     const accountOffice = await Accounts.findOne({
                         where: {
-                           name: 'Деньги в офисе'
+                           name: check.account
                         }
                     });
                     if (accountOffice) {
                         await Accounts.update({
                         value: Number(accountOffice.value) - Number(checkItem.salePrice)
                         },{
-                            where: { name: 'Деньги в офисе'}
+                            where: { name: check.account}
                         });
                         }
                     

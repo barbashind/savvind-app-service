@@ -155,8 +155,8 @@ export const updateAccounting = async (req, res) => {
         });
 
 
-        const currentValueFrom = Number(accountFrom.value);
-        const currentValueTo = Number(accountTo.value);
+        const currentValueFrom = Number(accountFrom?.value ?? 0);
+        const currentValueTo = Number(accountTo?.value ?? 0);
         const newValue = Number(req.body.value);
         
         const dif = newValue - Number(accounting.value);

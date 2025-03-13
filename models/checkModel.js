@@ -30,6 +30,9 @@ const CheckType = db.define('receipts',{
     courier:{
         type: DataTypes.STRING
     },
+    account:{
+        type: DataTypes.STRING
+    },
     createdAt:{
         type: DataTypes.DATE
     },
