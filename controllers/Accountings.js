@@ -95,7 +95,7 @@ export const getAccountingById = async (req, res) => {
 export const createAccounting = async (req, res) => {
     try {
 
-        if (req.body.accountFrom) {
+        if (req.body.accountFrom && req.body.value) {
             const accountFrom = await Accounts.findOne({
                 where: { name: req.body.accountFrom }
             })
@@ -108,7 +108,7 @@ export const createAccounting = async (req, res) => {
             })
         }
 
-        if (req.body.accountTo) {
+        if (req.body.accountTo && req.body.value) {
             const accountFrom = await Accounts.findOne({
                 where: { name: req.body.accountTo }
             })
