@@ -39,7 +39,7 @@ app.post('/api/login', async (req, res) => {
       if (!isMatch) {
           return res.status(403).send('Invalid password');
       }
-      const token = jwt.sign({ username: user.username, role: user.role  }, 'secret-key', { expiresIn: '3h' });
+      const token = jwt.sign({ username: user.username, role: user.role  }, 'secret-key', { expiresIn: '15h' });
       res.json({ token });
   } catch (error) {
       console.error(error);
