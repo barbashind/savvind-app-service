@@ -66,30 +66,34 @@ export const getAllItemsCheck = async (req, res) => {
                 limit: size,
                 offset: page * size,
             });
-    
-            
-            // Формируем ответ в формате TPageableResponse
-            const response = {
-                content: rows,
-                pageable: {
+
+            if (user.role === 'KUR') {
+                res.json({message: 'Нет полномочий'}); // Фильтрация по полю seller, если роль не ADM
+            } else {
+                    // Формируем ответ в формате TPageableResponse
+                const response = {
+                    content: rows,
+                    pageable: {
+                        sort: orderBy.length ? orderBy : null,
+                        pageNumber: page,
+                        pageSize: size,
+                        paged: true,
+                        unpaged: false,
+                    },
+                    dataHide: false,
+                    empty: rows.length === 0,
+                    first: page === 0,
+                    last: page >= Math.ceil(count / size) - 1,
+                    number: page,
+                    numberOfElements: rows.length,
+                    size: size,
                     sort: orderBy.length ? orderBy : null,
-                    pageNumber: page,
-                    pageSize: size,
-                    paged: true,
-                    unpaged: false,
-                },
-                dataHide: false,
-                empty: rows.length === 0,
-                first: page === 0,
-                last: page >= Math.ceil(count / size) - 1,
-                number: page,
-                numberOfElements: rows.length,
-                size: size,
-                sort: orderBy.length ? orderBy : null,
-                totalElements: count,
-                totalPages: Math.ceil(count / size),
-            };
-        res.json(response);
+                    totalElements: count,
+                    totalPages: Math.ceil(count / size),
+                };
+            res.json(response);
+            }
+            
     } catch (error) {
         res.json({ message: error.message });
     }  
@@ -132,13 +136,21 @@ export const getItemsCheckToReturn = async (req, res) => {
 
 
 export const getItemsCheckById = async (req, res) => {
+    const user = req.user;
     try {
         const item = await ItemCheck.findAll({
             where: {
                 checkId: req.params.checkId
             }
         });
-        res.json(item);
+        if (user.role === 'KUR') {
+            const itemKur = item.map(elem => ({...elem.toJSON(), costPrice: 0}))
+            res.json(itemKur);
+        } else {
+            res.json(item);
+        }
+
+        
     } catch (error) {
         res.json({ message: error.message });
     }  

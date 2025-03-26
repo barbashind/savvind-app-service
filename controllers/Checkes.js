@@ -10,7 +10,7 @@ export const getAllCheckes = async (req, res) => {
         const whereConditions = {};
         const checkIds = [];
         const user = req.user;
-        if (user.role !== 'ADM') {
+        if (user.role === 'SLR') {
             whereConditions.seller = user.username; // Фильтрация по полю seller, если роль не ADM
         }
         if (req.body.customer) {
