@@ -10,8 +10,14 @@ export const getAllCheckes = async (req, res) => {
         const whereConditions = {};
         const checkIds = [];
         const user = req.user;
-        if (user.role === 'SLR') {
-            whereConditions.seller = user.username; // Фильтрация по полю seller, если роль не ADM
+        const twoWeeksAgo = new Date();
+        twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
+       
+        if (user.role === 'SLR' || user.role === 'KUR') {
+            whereConditions.createdAt = {
+                [Op.gt]: twoWeeksAgo 
+            };
         }
         if (req.body.customer) {
             whereConditions.customer = {
