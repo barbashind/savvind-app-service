@@ -272,6 +272,98 @@ export const returnItemBatch = async (req, res) => {
     }  
 }
 
+export const changeWarehouseItemSerialNum = async (req, res) => {
+    try {
+        const  warehouse = req.body.warehouse;
+        const  serialNumbers = req.body.serialNumbers;
+        console.log(req.body)
+        if (!serialNumbers || !Array.isArray(serialNumbers)) {
+            return res.status(400).json({ message: "Invalid serial numbers format" });
+        }
+
+        const updateResult = await ItemBatch.update(
+            { warehouse },
+            {
+                where: {
+                    serialNumber: {
+                        [Op.in]: serialNumbers 
+                    }
+                }
+                }
+        );
+
+        if (updateResult[0] === 0) {
+            return res.status(404).json({ message: "No items found with the provided serial numbers" });
+        }
+
+        res.json({
+            message: "Warehouse ID updated for specified serial numbers"
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+export const changeWarehouseItem = async (req, res) => {
+    try {
+        const warehouse = req.body.warehouse;
+        const itemBatchId = req.body.itemBatchId;
+        const quant = req.body.quant;
+
+        if (!warehouse || !itemBatchId || !quant) {
+            return res.status(400).json({ message: "Invalid data" });
+        }
+
+        // Получаем текущую запись по itemBatchId
+        const itemBatch = await ItemBatch.findOne({
+            where: {
+                itemBatchId: itemBatchId
+            }
+        });
+
+        if (!itemBatch) {
+            return res.status(404).json({ message: "Item not found" });
+        }
+
+        // Если quant равно remainder
+        if (quant === itemBatch.remainder) {
+            await ItemBatch.update(
+                { warehouse: warehouse },
+                {
+                    where: {
+                        itemBatchId: itemBatchId
+                    }
+                }
+            );
+        } else if (quant < itemBatch.remainder) {
+            // Вычитаем quant из remainder
+            await ItemBatch.update(
+                { remainder: itemBatch.remainder - quant },
+                {
+                    where: {
+                        itemBatchId: itemBatchId
+                    }
+                }
+            );
+
+            // Создаем новую запись
+            await ItemBatch.create({
+                ...itemBatch.dataValues, // Копируем все значения
+                
+                remainder: quant,          // Устанавливаем новое значение remainder
+                warehouse: warehouse       // Устанавливаем новое значение warehouse
+            });
+        } else {
+            return res.status(400).json({ message: "Quant is greater than remainder" });
+        }
+
+        res.json({
+            message: "Updated successfully"
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
  
 export const deleteItemBatch = async (req, res) => {
     try {

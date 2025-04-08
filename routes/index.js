@@ -13,7 +13,7 @@ import {
     } from "../controllers/Nomenclature.js";
 import { createProductType, deleteProductType, getAllProductTypes, getProductTypeByLabel, updateProductType } from "../controllers/ProductTypes.js";
 import { createBatch, deleteBatch, getBatchById, getBatchByNumber, purchaseFilter, updateBatch } from "../controllers/Batches.js";
-import { createItemsBatch, deleteItemBatch, deleteItemsBatch, getItemsBatchById, getItemsBatchByNumber, getItemsBatchFilter, getItemsBatchForReturn, getItemsBatchRegById, returnItemBatch, updateItemsBatch } from "../controllers/ItemsBatch.js";
+import { changeWarehouseItem, changeWarehouseItemSerialNum, createItemsBatch, deleteItemBatch, deleteItemsBatch, getItemsBatchById, getItemsBatchByNumber, getItemsBatchFilter, getItemsBatchForReturn, getItemsBatchRegById, returnItemBatch, updateItemsBatch } from "../controllers/ItemsBatch.js";
 import { getAllBatchesReg, getBatchRegById } from "../controllers/BatchesReg.js";
 import { createCheck, deleteCheck, getAllCheckes, getCheckById, getProductBySerialNumber, updateCheck } from "../controllers/Checkes.js";
 import { getAllDelivers } from "../controllers/Delivers.js";
@@ -123,5 +123,8 @@ router.delete('/api/delete-warehouse/:warehouseId', authenticateToken, deleteWar
 router.get('/api/currencies/all', authenticateToken, getAllCurrencies);
 router.post('/api/update-currencies', authenticateToken, updateCurrencies);
 router.delete('/api/delete-currency/:id', authenticateToken, deleteCurrency);
+
+router.post('/api/change-warehouse-by-serial-num', authenticateToken, changeWarehouseItemSerialNum);
+router.post('/api/change-warehouse-by-name', authenticateToken, changeWarehouseItem);
 
 export default router;

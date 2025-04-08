@@ -167,7 +167,7 @@ export const getNomenclatureById = async (req, res) => {
                 },
                 order: [['itemBatchId', 'DESC']] // Сортируем по itemBatchId в порядке убывания
             });
-            const lastCostPriceAll = lastItemBatch.costPriceAll
+            const lastCostPriceAll = lastItemBatch ? lastItemBatch.costPriceAll : 0
             res.json({
                 ...nomenclature.toJSON(), 
                 lastCostPriceAll
