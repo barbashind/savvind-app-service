@@ -38,6 +38,9 @@ const Batch = db.define('batches',{
     },
     rate:{
         type: DataTypes.INTEGER
+    },
+    author: {
+        type: DataTypes.STRING
     }
 },{
     freezeTableName: true

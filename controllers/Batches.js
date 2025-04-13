@@ -135,13 +135,13 @@ export const getBatchById = async (req, res) => {
 export const createBatch = async (req, res) => {
     try {
          // Проверяем, есть ли данные в body
-         if (!(req.body.batchNumber)) {
+         if (!(req.body.batchNumber) && (req.body.batchNumber !== 0)) {
             return res.status(400).json({errors: [{state: 'batchNumber', caption: 'Укажите номер партии' }]});
         }
 
         // Проверка на уникальность batchNumber
          const existingBatch = await Batch.findOne({ where: { batchNumber: req.body.batchNumber } });
-         if (existingBatch) {
+         if (existingBatch && (req.body.batchNumber !== 0)) {
              return res.status(400).json({ errors: [{ state: 'batchNumber', caption: 'Этот номер партии уже существует' }] });
          }
 

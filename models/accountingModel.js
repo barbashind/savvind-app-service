@@ -34,6 +34,9 @@ const Accounting = db.define('accounting',{
     currency:{
         type: DataTypes.STRING
     },
+    author:{
+        type: DataTypes.STRING
+    },
     createdAt:{
         type: DataTypes.DATE
     },

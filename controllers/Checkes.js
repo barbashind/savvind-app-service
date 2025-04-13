@@ -316,39 +316,65 @@ export const deleteCheck = async (req, res) => {
             }
         });
 
-        const accountOffice = await Accounts.findOne({
-            where: {
-                name: req.body.account
-            }
-        })
-        await Accounts.update({
-            value: Number(accountOffice.value) - Number(check.summ)
-        }, 
-        { where: {
-            name: req.body.account
-        }
-        })
+        // const accountOffice = await Accounts.findOne({
+        //     where: {
+        //         name: 'Деньги в офисе'
+        //     }
+        // })
+        
 
-        const accounting = await Accounting.findOne({
-            where: {
-                accountTo: null,
-                justification: req.params.checkId
-            }
-        });
+        // const accountingFrom = await Accounting.findOne({
+        //     where: {
+        //         accountTo: null,
+        //         justification: req.params.checkId
+        //     }
+        // });
+        // const accountingTo = await Accounting.findOne({
+        //     where: {
+        //         accountFrom: null,
+        //         justification: req.params.checkId
+        //     }
+        // });
 
-        await Accounts.update({
-            value: Number(accountOffice.value) + Number(check.summ)
-        }, 
-        { where: {
-            name: accounting.accountFrom
-        }
-        })
+        // const accountFrom = await Accounts.findOne({
+        //     where: {
+        //         name: accountingFrom.accountFrom
+        //     }
+        // })
 
-        await Accounting.destroy({
-            where: {
-                justification: req.params.checkId
-            }
-        });
+        // if (accountingTo) {
+        //     await Accounts.update({
+        //         value: Number(accountOffice.value) - Number(check.summ)
+        //     }, 
+        //     { where: {
+        //         name: req.body.account
+        //     }
+        //     })
+        //     await Accounting.destroy({
+        //         where: {
+        //             justification: req.params.checkId
+        //         }
+        //     });
+        // }
+        // if (accountingFrom) {
+            
+
+        //     await Accounts.update({
+        //         value: Number(accountFrom.value) + Number(check.summ)
+        //     }, 
+        //     { where: {
+        //         name: accountingFrom.accountFrom
+        //     }
+        //     })
+
+        //     await Accounting.destroy({
+        //         where: {
+        //             justification: req.params.checkId
+        //         }
+        //     });
+        // }
+
+        
 
 
         res.json({

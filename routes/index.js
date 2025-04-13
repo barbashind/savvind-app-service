@@ -17,7 +17,7 @@ import { changeWarehouseItem, changeWarehouseItemSerialNum, createItemsBatch, de
 import { getAllBatchesReg, getBatchRegById } from "../controllers/BatchesReg.js";
 import { createCheck, deleteCheck, getAllCheckes, getCheckById, getProductBySerialNumber, updateCheck } from "../controllers/Checkes.js";
 import { getAllDelivers } from "../controllers/Delivers.js";
-import { createItemsCheck, getAllItemsCheck, getItemsCheckById, getItemsCheckBySerial, getItemsCheckToReturn, restoreItemsCheck } from "../controllers/ItemsCheck.js";
+import { createItemsCheck, getAllItemsCheck, getAssets, getItemsCheckById, getItemsCheckBySerial, getItemsCheckToReturn, getRevenueAndProfit, getRevenueAndProfitGraph, restoreItemsCheck } from "../controllers/ItemsCheck.js";
 import { getAllContractors } from "../controllers/Contractors.js";
 import { accountingFilter, createAccounting, deleteAccounting, getAccountingById, updateAccounting } from "../controllers/Accountings.js";
 import { deleteAccount, deleteCategory, deleteContractor, deleteCurrency, deleteDeliver, deleteUser, deleteWarehouse, getAllAccounts, getAllCategories, getAllCurrencies, getAllUsers, getAllWarehouses, updateAccounts, updateCategories, updateContractors, updateCurrencies, updateDelivers, updateUsers, updateWarehouses } from "../controllers/Settings.js";
@@ -127,4 +127,7 @@ router.delete('/api/delete-currency/:id', authenticateToken, deleteCurrency);
 router.post('/api/change-warehouse-by-serial-num', authenticateToken, changeWarehouseItemSerialNum);
 router.post('/api/change-warehouse-by-name', authenticateToken, changeWarehouseItem);
 
+router.post('/api/analytic-by-users', authenticateToken, getRevenueAndProfit);
+router.post('/api/analytic-graph', authenticateToken, getRevenueAndProfitGraph);
+router.get('/api/analytic-assets', authenticateToken, getAssets);
 export default router;

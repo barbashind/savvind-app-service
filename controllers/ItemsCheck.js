@@ -3,8 +3,196 @@ import CheckType from "../models/checkModel.js";
 import ItemBatch from "../models/itemsBatchModel.js";
 import ItemCheck from "../models/itemsCheckModel.js";
 import { Op } from 'sequelize';
-import sequelize from 'sequelize';
 import { Accounts } from "../models/settingsModel.js";
+
+export const getRevenueAndProfit = async (req, res) => {
+    try {
+        const { users, startDate, endDate } = req.body;
+        const results = [];
+
+        for (const user of users) {
+            // Ищем все saleId для текущего пользователя
+            const sales = await CheckType.findAll({
+                where: {
+                    seller: user,
+                    createdAt: {
+                        [Op.gte]: startDate,
+                        [Op.lt]: endDate
+                    }
+                }
+            });
+
+            const saleIds = sales.map(sale => sale.checkId);
+
+            if (saleIds.length > 0) {
+                // Ищем записи в таблице receipts по найденным saleId
+                const receipts = await ItemCheck.findAll({
+                    where: {
+                        checkId: {
+                            [Op.in]: saleIds
+                        }
+                    }
+                });
+
+                // Рассчитываем revenue и margProfit
+                const revenue = Number(receipts.reduce((acc, receipt) => acc + parseFloat(receipt.salePrice), 0).toFixed(2));
+                const cost = Number(receipts.reduce((acc, receipt) => acc + parseFloat(receipt.costPrice), 0).toFixed(2));
+                const margProfit = Number((revenue - cost).toFixed(2)) ? Number((revenue - cost).toFixed(2)) : 0;
+
+                results.push({ user, revenue, margProfit });
+            } else {
+                // Если нет продаж, добавляем пользователя с нулевыми значениями
+                results.push({ user, revenue: 0, margProfit: 0 });
+            }
+        }
+
+        res.json(results);
+    } catch (error) {
+        res.json({ message: error.message });
+    }
+}
+import moment from 'moment'; // Убедитесь, что вы установили moment.js для работы с датами
+import Batch from "../models/batchModel.js";
+
+export const getRevenueAndProfitGraph = async (req, res) => {
+    try {
+        const { users, startDate, endDate } = req.body;
+        const results = [];
+
+        // Преобразуем строки дат в объекты Moment
+        const start = moment(startDate);
+        const end = moment(endDate);
+
+        // Проходим по всем датам в диапазоне
+        for (let date = start.clone(); date.isBefore(end); date.add(1, 'days')) {
+            const currentDate = date.format('YYYY-MM-DD'); // Форматируем дату
+
+            for (const user of users) {
+                // Ищем все saleId для текущего пользователя за текущую дату
+                const sales = await CheckType.findAll({
+                    where: {
+                        seller: user,
+                        createdAt: {
+                            [Op.gte]: moment(currentDate).startOf('day').toDate(),
+                            [Op.lt]: moment(currentDate).endOf('day').toDate()
+                        }
+                    }
+                });
+
+                const saleIds = sales.map(sale => sale.checkId);
+
+                if (saleIds.length > 0) {
+                    // Ищем записи в таблице receipts по найденным saleId
+                    const receipts = await ItemCheck.findAll({
+                        where: {
+                            checkId: {
+                                [Op.in]: saleIds
+                            }
+                        }
+                    });
+
+                    // Рассчитываем revenue и margProfit
+                    const revenue = Number(receipts.reduce((acc, receipt) => acc + parseFloat(receipt.salePrice), 0).toFixed(2));
+                    const cost = Number(receipts.reduce((acc, receipt) => acc + parseFloat(receipt.costPrice), 0).toFixed(2));
+                    const margProfit = Number((revenue - cost).toFixed(2)) ? Number((revenue - cost).toFixed(2)) : 0;
+
+                    results.push({ user, date: currentDate, revenue, margProfit });
+                } else {
+                    // Если нет продаж, добавляем пользователя с нулевыми значениями
+                    results.push({ user, date: currentDate, revenue: 0, margProfit: 0 });
+                }
+            }
+        }
+
+        res.json(results);
+    } catch (error) {
+        res.json({ message: error.message });
+    }
+}
+
+export const getAssets = async (req, res) => {
+    try {
+        // Найти записи в таблице batches с status "CREATED" или "REGISTRATION"
+        const createdOrRegistrationBatches = await Batch.findAll({
+            where: {
+                batchStatus: { [Op.in]: ["CREATED", "REGISTRATION"] }
+            }
+        });
+
+        // Суммировать costPriceAll из items_batch для найденных batches
+        let totalCostPriceSup = 0;
+
+        for (const sup of createdOrRegistrationBatches) {
+            const items = await ItemBatch.findAll({ where: { batchId: sup.batchId } });
+            
+            items.forEach(item => {
+                
+                totalCostPriceSup += Number(item.quant) * Number(item.costPriceAll);
+                
+            });
+        }
+
+        const supplies = Number(totalCostPriceSup);
+
+        // Найти записи в таблице batches с status "COMPLETED"
+        const completedBatches = await Batch.findAll({
+            where: { batchStatus: "COMPLETED" }
+        });
+        
+        let totalCostPriceWithSerial = 0;
+        let totalCostPriceWithoutSerial = 0;
+
+        for (const batch of completedBatches) {
+            const items = await ItemBatch.findAll({ where: { batchId: batch.batchId } });
+            
+            items.forEach(item => {
+                if (item.hasSerialNumber) {
+                    if (item.serialNumber && !item.isSaled) {
+                        totalCostPriceWithSerial += Number(item.costPriceAll);
+                    }
+                } else {
+                    totalCostPriceWithoutSerial += Number(item.remainder) * Number(item.costPriceAll);
+                }
+            });
+        }
+
+        const warehouse = Number(totalCostPriceWithSerial) + Number(totalCostPriceWithoutSerial);
+
+        // Получить все записи в таблице accounts кроме "Деньги в офисе"
+        const accounts = await Accounts.findAll({
+            where: { name: { [Op.ne]: "Деньги в офисе" } }
+        });
+
+        const debit = accounts.reduce((sum, account) => sum + Number(account.value), 0);
+
+        // Запись "Деньги в офисе"
+        const officeAccount = await Accounts.findOne({ where: { name: "Деньги в офисе" } });
+        const officeAsset = officeAccount ? officeAccount.value : 0;
+
+        // Суммировать все значения поля salePrice в таблице sales
+        const revenueResult = await ItemCheck.sum('salePrice');
+        const revenue = revenueResult || 0;
+
+        // Суммировать все значения поля costPrice в таблице sales
+        const costResult = await ItemCheck.sum('costPrice');
+        const cost = costResult || 0;
+
+        // Вычислить маржинальную прибыль
+        const margProfit = revenue - cost;
+
+        // Выдать объект с результатами
+        res.json({
+            supplies: supplies,
+            warehouse: warehouse,
+            debit: debit,
+            officeAsset: officeAsset,
+            revenue: revenue,
+            margProfit: margProfit
+        });
+    } catch (error) {
+        res.json({ message: error.message });
+    }
+}
 
 export const getAllItemsCheck = async (req, res) => {
     try {
@@ -273,6 +461,7 @@ export const restoreItemsCheck = async (req, res) => {
                             justification: checkItem.checkId.toString(),  accountFrom: null
                         }
                     });
+
                     if (accountingOffice) {
                         if (Number(accountingOffice.value) - Number(checkItem.salePrice) === 0) {
                         await Accounting.destroy({
@@ -328,7 +517,7 @@ export const restoreItemsCheck = async (req, res) => {
                            name: check.account
                         }
                     });
-                    if (accountOffice) {
+                    if (accountOffice && accountingOffice) {
                         await Accounts.update({
                         value: Number(accountOffice.value) - Number(checkItem.salePrice)
                         },{
@@ -372,6 +561,37 @@ export const restoreItemsCheck = async (req, res) => {
                         where: { checkId: item.checkId }
                     });
 
+                    const accounting = await Accounting.findOne({
+                        where: {
+                            justification: checkItem.checkId.toString(),  accountTo: null
+                        }
+                    });
+
+                    if (accounting && checkItem.partner) {
+                        if (Number(accounting.value) - Number(checkItem.salePrice) === 0) {
+                            await Accounting.destroy({
+                                where: { justification: checkItem.checkId.toString(),  accountTo: null}
+                            });
+                        } else {
+                            await Accounting.update({
+                                value: Number(accounting.value) - Number(checkItem.salePrice)
+                            },{
+                                where: { justification: checkItem.checkId.toString(),  accountTo: null}
+                            });
+                        }
+                    }
+                    if (accounting && checkItem.partner) {
+                    const account = await Accounts.findOne({
+                        where: {
+                            name: accounting.accountFrom
+                        }
+                    });
+                    await Accounts.update({
+                        value: Number(account.value) + Number(checkItem.salePrice)
+                    },{
+                        where: { name: accounting.accountFrom}
+                    });
+                    }
 
                     const accountingOffice = await Accounting.findOne({
                         where: {
@@ -397,7 +617,7 @@ export const restoreItemsCheck = async (req, res) => {
                            name: check.account
                         }
                     });
-                    if (accountOffice) {
+                    if (accountOffice && accountingOffice) {
                         await Accounts.update({
                         value: Number(accountOffice.value) - Number(checkItem.salePrice)
                         },{
