@@ -34,6 +34,30 @@ export const getAllCheckes = async (req, res) => {
                     [Op.lt]: req.body.dateMax
                 };
             }
+        const conditions = [];
+
+        if (req.body.isPaid) {
+            conditions.push({
+                isBooking: false,
+                isUnpaid: false
+            });
+        }
+        if (req.body.isUnpaid) {
+            conditions.push({
+                isUnpaid: true
+            });
+        }
+        if (req.body.isBooking) {
+            conditions.push({
+                isBooking: true
+            });
+        }
+
+        // Объединяем условия с помощью OR
+        if (conditions.length > 0) {
+            whereConditions[Op.or] = conditions;
+        }
+        
         
         if (req.body.name) {
                 const itemsCheckRecords = await ItemCheck.findAll({

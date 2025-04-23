@@ -124,7 +124,10 @@ export const updateNomenclatureRemains = async (req, res) => {
                         where: {
                             itemId: nomenclature.itemId,
                             serialNumber: { [Op.ne]: null },
-                            isSaled: false || null
+                            [Op.or]: [
+                                { isSaled: false },
+                                { isSaled: null }
+                            ]
                         }
                     });
                     nomenclature.remains = count;
