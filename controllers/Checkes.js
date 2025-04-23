@@ -41,6 +41,10 @@ export const getAllCheckes = async (req, res) => {
                 isBooking: false,
                 isUnpaid: false
             });
+            conditions.push({
+                isBooking: null,
+                isUnpaid: null
+            });
         }
         if (req.body.isUnpaid) {
             conditions.push({
