@@ -215,15 +215,15 @@ export const updateItemsBatch = async (req, res) => {
                     }
                 });
             }
-            if (item.hasSerialNumber) {
-                return await ItemBatch.destroy({
-                    where: {
-                        itemId: item.itemId,
-                        batchId: item.batchId,
-                        serialNumber:{ [Op.ne]: null } 
-                    }
-                });
-            }
+            // if (item.hasSerialNumber) {
+            //     return await ItemBatch.destroy({
+            //         where: {
+            //             itemId: item.itemId,
+            //             batchId: item.batchId,
+            //             serialNumber:{ [Op.ne]: null } 
+            //         }
+            //     });
+            // }
 
         });
 
