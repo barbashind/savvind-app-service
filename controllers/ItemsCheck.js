@@ -110,6 +110,114 @@ export const getRevenueAndProfitGraph = async (req, res) => {
     }
 }
 
+export const getAnalyticProd = async (req, res) => {
+    try {
+        const { startDate, endDate } = req.body;
+        const start = moment(startDate);
+        const end = moment(endDate);
+
+        // Получаем все записи за период
+        const sales = await ItemCheck.findAll({
+            where: {
+                createdAt: {
+                    [Op.gte]: start.toDate(),
+                    [Op.lt]: end.toDate()
+                }
+            }
+        });
+
+        // Сгруппируем данные по name
+        const grouped = sales.reduce((acc, item) => {
+            const name = item.name;
+
+            if (!acc[name]) {
+                acc[name] = {
+                    name,
+                    quantAll: 0,
+                    quantMy: 0,
+                    quantPartner: 0,
+                    revenueAll: 0,
+                    revenueMy: 0,
+                    revenuePartner: 0,
+                    margAll: 0,
+                    margMy: 0,
+                    margPartner: 0
+                };
+            }
+
+            const partnerIsNull = item.partner === null || item.partner === undefined;
+            const margin = Number(item.salePrice) - Number(item.costPrice);
+
+            acc[name].quantAll += 1;
+            acc[name].revenueAll += Number(item.salePrice);
+            acc[name].margAll += Number(margin);
+
+            if (partnerIsNull) {
+                acc[name].quantMy += 1;
+                acc[name].revenueMy += Number(item.salePrice);
+                acc[name].margMy += Number(margin);
+            } else {
+                acc[name].quantPartner += 1;
+                acc[name].revenuePartner += Number(item.salePrice);
+                acc[name].margPartner += Number(margin);
+            }
+
+            return acc;
+        }, {});
+
+        // Преобразуем в массив
+        let results = Object.values(grouped);
+
+        // Обработка сортировки
+        if (req.query.sort) {
+            const sortParams = req.query.sort.split('&');
+            sortParams.forEach(param => {
+                const [field, order] = param.split(',');
+                if (field && order) {
+                    results.sort((a, b) => {
+                        if (!(field in a) || !(field in b)) return 0;
+                        if (order.toLowerCase() === 'desc') return b[field] > a[field] ? 1 : -1;
+                        return a[field] > b[field] ? 1 : -1;
+                    });
+                }
+            });
+        }
+
+        // Пагинация
+        const page = Math.max(0, parseInt(req.query.page) || 0);
+        const size = Math.max(1, parseInt(req.query.size) || 10);
+
+        const pagedResults = results.slice(page * size, page * size + size);
+
+        // Формируем ответ в формате TPageableResponse
+        const response = {
+            content: pagedResults,
+            pageable: {
+                sort: req.query.sort || null,
+                pageNumber: page,
+                pageSize: size,
+                paged: true,
+                unpaged: false,
+            },
+            dataHide: false,
+            empty: pagedResults.length === 0,
+            first: page === 0,
+            last: page >= Math.ceil(results.length / size) - 1,
+            number: page,
+            numberOfElements: pagedResults.length,
+            size: size,
+            sort: req.query.sort || null,
+            totalElements: results.length,
+            totalPages: Math.ceil(results.length / size),
+        };
+
+        res.json(response);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server error');
+    }
+};
+
 export const getAssets = async (req, res) => {
     try {
         // Найти записи в таблице batches с status "CREATED" или "REGISTRATION"
