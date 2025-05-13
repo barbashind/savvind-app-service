@@ -1,29 +1,24 @@
 import Accounting from "../models/accountingModel.js";
 import { Op } from 'sequelize';
 import { Accounts } from "../models/settingsModel.js";
- 
-export const getAllAccountings = async (req, res) => {
-    try {
-        const whereConditions = {};
-
-        const orderBy = [];
-                if (req.body.sortDate) {
-                        orderBy.push(['createdAt', req.body.sortRemains === 'asc' ? 'ASC' : 'DESC']);
-                }
-            
-        const accountings = await Accounting.findAll({
-                where: whereConditions,
-                order: orderBy.length ? orderBy : null,
-            });
-        res.json(accountings);
-    } catch (error) {
-        res.json({ message: error.message });
-    }  
-}
 
 export const accountingFilter = async (req, res) => {
+    const user = req.user;
     try {
         const whereConditions = {};
+        if (user.role === 'SLR') {
+            whereConditions[Op.or] = [
+                { 
+                    accountFrom: { [Op.like]: `Деньги в офисе`},
+                    accountTo: null,
+                },
+                { 
+                    accountFrom: null,
+                    accountTo: { [Op.like]: `Деньги в офисе` } 
+                }
+            ];
+        }
+
         if (req.body.searchText) {
             whereConditions[Op.or] = [
                 { accountFrom: { [Op.like]: `%${req.body.searchText}%`} },

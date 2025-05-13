@@ -316,3 +316,35 @@ export const getNomenclatureById = async (req, res) => {
             
         });
     };
+
+
+    export const getItemsStatById = async (req, res) => {
+        const itemId = req.params.itemId; 
+    
+        try {
+            const items = await ItemCheck.findAll({
+                where: {
+                    itemId: itemId 
+                }
+            });
+            const salledAll = items?.length;
+            const dates = [...new Set(items.map(item => item.createdAt))];
+
+
+            const sales = dates.map( date => ({
+                serialNumbers: items?.filter(item => (item.createdAt === date))?.map(elem => elem.serialNumber),
+                date: date,
+                saled: items?.filter(item => (item.createdAt === date))?.length,
+            }))
+
+            const dataStat = {
+                sales,
+                salledAll: salledAll,
+            };
+    
+            res.json(dataStat);
+    
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    };

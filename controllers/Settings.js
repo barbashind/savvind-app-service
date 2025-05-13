@@ -3,9 +3,17 @@ import Deliver from "../models/deliversModel.js";
 import Users, { Accounts, Categories, Currencies, Warehouses } from "../models/settingsModel.js";
 
 export const getAllAccounts = async (req, res) => {
+    const user = req.user;
     try {
+        const accountsData = []
         const accounts = await Accounts.findAll();
-        res.json(accounts);
+        if (user.role === 'SLR') {
+            accountsData.push(...accounts.filter((el) => (el.name === 'Деньги в офисе')))
+        } else {
+            accountsData.push(...accounts) 
+        }
+        
+        res.json(accountsData);
     } catch (error) {
         res.json({ message: error.message });
     }  

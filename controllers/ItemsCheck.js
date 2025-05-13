@@ -53,6 +53,7 @@ export const getRevenueAndProfit = async (req, res) => {
 }
 import moment from 'moment'; // Убедитесь, что вы установили moment.js для работы с датами
 import Batch from "../models/batchModel.js";
+import Deliver from "../models/deliversModel.js";
 
 export const getRevenueAndProfitGraph = async (req, res) => {
     try {
@@ -220,6 +221,11 @@ export const getAnalyticProd = async (req, res) => {
 
 export const getAssets = async (req, res) => {
     try {
+
+        const { startDate, endDate } = req.body;
+        const start = moment(startDate);
+        const end = moment(endDate);
+
         // Найти записи в таблице batches с status "CREATED" или "REGISTRATION"
         const createdOrRegistrationBatches = await Batch.findAll({
             where: {
@@ -278,11 +284,23 @@ export const getAssets = async (req, res) => {
         const officeAsset = officeAccount ? officeAccount.value : 0;
 
         // Суммировать все значения поля salePrice в таблице sales
-        const revenueResult = await ItemCheck.sum('salePrice');
+        const revenueResult = await ItemCheck.sum('salePrice', {
+            where: {
+                createdAt: {
+                    [Op.between]: [start.toDate(), end.toDate()]
+                }
+            }
+        });
         const revenue = revenueResult || 0;
 
         // Суммировать все значения поля costPrice в таблице sales
-        const costResult = await ItemCheck.sum('costPrice');
+         const costResult = await ItemCheck.sum('costPrice', {
+            where: {
+                createdAt: {
+                    [Op.between]: [start.toDate(), end.toDate()]
+                }
+            }
+        });
         const cost = costResult || 0;
 
         // Вычислить маржинальную прибыль
@@ -301,6 +319,46 @@ export const getAssets = async (req, res) => {
         res.json({ message: error.message });
     }
 }
+
+export const getDeliversAnalytics = async (req, res) => {
+    try {
+                const batches = await Batch.findAll({
+                    where: {
+                        batchStatus: 'CREATED' 
+                    }
+                });
+
+                const deliversIds = [...new Set(batches.map(item => item.deliver))];
+                const delivers = []
+
+                for (const deliverId of deliversIds) {
+                    const deliverName = await Deliver.findOne({ where: { deliverId: deliverId } });
+                    
+                    const productsMap = {};
+                    const deliverBatches = batches.filter(el => el.deliver === deliverId);
+                    
+                    for (const deliverBatch of deliverBatches) {
+                        const productsBatch = await ItemBatch.findAll({ where: { batchId: deliverBatch.batchId } });
+                        for (const elem of productsBatch) {
+                            if (productsMap[elem.name]) {
+                                productsMap[elem.name] += elem.quant; 
+                            } else {
+                                productsMap[elem.name] = elem.quant;
+                            }
+                        }
+                    }
+                    const products = Object.entries(productsMap).map(([name, quant]) => ({ name, quant }));
+                    
+                    delivers.push({ deliver: deliverName.name, products: products });
+                }
+
+                res.json(delivers);
+        
+            } catch (error) {
+                res.status(500).json({ message: error.message });
+            }
+        };
+
 
 export const getAllItemsCheck = async (req, res) => {
     try {
