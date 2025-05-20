@@ -7,8 +7,10 @@ import { Accounts } from "../models/settingsModel.js";
 
 export const getRevenueAndProfit = async (req, res) => {
     try {
-        const { users, startDate, endDate } = req.body;
+        const { users, startDate, endDate, account } = req.body;
         const results = [];
+
+        const partner = (account === 'Деньги в офисе') ? null : account;
 
         for (const user of users) {
             // Ищем все saleId для текущего пользователя
@@ -18,7 +20,7 @@ export const getRevenueAndProfit = async (req, res) => {
                     createdAt: {
                         [Op.gte]: startDate,
                         [Op.lt]: endDate
-                    }
+                    },
                 }
             });
 
@@ -26,7 +28,15 @@ export const getRevenueAndProfit = async (req, res) => {
 
             if (saleIds.length > 0) {
                 // Ищем записи в таблице receipts по найденным saleId
-                const receipts = await ItemCheck.findAll({
+                
+                const receipts = account ?  await ItemCheck.findAll({
+                    where: {
+                        checkId: {
+                            [Op.in]: saleIds
+                        },
+                        partner: partner,
+                    }
+                }) : await ItemCheck.findAll({
                     where: {
                         checkId: {
                             [Op.in]: saleIds
@@ -57,8 +67,9 @@ import Deliver from "../models/deliversModel.js";
 
 export const getRevenueAndProfitGraph = async (req, res) => {
     try {
-        const { users, startDate, endDate } = req.body;
+        const { users, startDate, endDate, account } = req.body;
         const results = [];
+        const partner = (account === 'Деньги в офисе') ? null : account;
 
         // Преобразуем строки дат в объекты Moment
         const start = moment(startDate);
@@ -84,13 +95,20 @@ export const getRevenueAndProfitGraph = async (req, res) => {
 
                 if (saleIds.length > 0) {
                     // Ищем записи в таблице receipts по найденным saleId
-                    const receipts = await ItemCheck.findAll({
-                        where: {
-                            checkId: {
-                                [Op.in]: saleIds
-                            }
+                    const receipts = account ?  await ItemCheck.findAll({
+                    where: {
+                        checkId: {
+                            [Op.in]: saleIds
+                        },
+                        partner: partner,
+                    }
+                }) : await ItemCheck.findAll({
+                    where: {
+                        checkId: {
+                            [Op.in]: saleIds
                         }
-                    });
+                    }
+                });
 
                     // Рассчитываем revenue и margProfit
                     const revenue = Number(receipts.reduce((acc, receipt) => acc + parseFloat(receipt.salePrice), 0).toFixed(2));
@@ -222,9 +240,10 @@ export const getAnalyticProd = async (req, res) => {
 export const getAssets = async (req, res) => {
     try {
 
-        const { startDate, endDate } = req.body;
+        const { startDate, endDate, account } = req.body;
         const start = moment(startDate);
         const end = moment(endDate);
+        const partner = (account === 'Деньги в офисе') ? null : account;
 
         // Найти записи в таблице batches с status "CREATED" или "REGISTRATION"
         const createdOrRegistrationBatches = await Batch.findAll({
@@ -284,17 +303,31 @@ export const getAssets = async (req, res) => {
         const officeAsset = officeAccount ? officeAccount.value : 0;
 
         // Суммировать все значения поля salePrice в таблице sales
-        const revenueResult = await ItemCheck.sum('salePrice', {
+        const revenueResult = account ? await ItemCheck.sum('salePrice', {
             where: {
                 createdAt: {
                     [Op.between]: [start.toDate(), end.toDate()]
-                }
+                },
+                partner: partner,
+            }
+        }) : await ItemCheck.sum('salePrice', {
+            where: {
+                createdAt: {
+                    [Op.between]: [start.toDate(), end.toDate()]
+                },
             }
         });
         const revenue = revenueResult || 0;
 
         // Суммировать все значения поля costPrice в таблице sales
-         const costResult = await ItemCheck.sum('costPrice', {
+         const costResult = account ? await ItemCheck.sum('costPrice', {
+            where: {
+                createdAt: {
+                    [Op.between]: [start.toDate(), end.toDate()]
+                },
+                partner: partner,
+            }
+        }) : await ItemCheck.sum('costPrice', {
             where: {
                 createdAt: {
                     [Op.between]: [start.toDate(), end.toDate()]
@@ -322,42 +355,46 @@ export const getAssets = async (req, res) => {
 
 export const getDeliversAnalytics = async (req, res) => {
     try {
-                const batches = await Batch.findAll({
-                    where: {
-                        batchStatus: 'CREATED' 
-                    }
-                });
-
-                const deliversIds = [...new Set(batches.map(item => item.deliver))];
-                const delivers = []
-
-                for (const deliverId of deliversIds) {
-                    const deliverName = await Deliver.findOne({ where: { deliverId: deliverId } });
-                    
-                    const productsMap = {};
-                    const deliverBatches = batches.filter(el => el.deliver === deliverId);
-                    
-                    for (const deliverBatch of deliverBatches) {
-                        const productsBatch = await ItemBatch.findAll({ where: { batchId: deliverBatch.batchId } });
-                        for (const elem of productsBatch) {
-                            if (productsMap[elem.name]) {
-                                productsMap[elem.name] += elem.quant; 
-                            } else {
-                                productsMap[elem.name] = elem.quant;
-                            }
-                        }
-                    }
-                    const products = Object.entries(productsMap).map(([name, quant]) => ({ name, quant }));
-                    
-                    delivers.push({ deliver: deliverName.name, products: products });
-                }
-
-                res.json(delivers);
-        
-            } catch (error) {
-                res.status(500).json({ message: error.message });
+        const batches = await Batch.findAll({
+            where: {
+                batchStatus: 'CREATED' 
             }
-        };
+        });
+
+        const deliversIds = [...new Set(batches.map(item => item.deliver))];
+        const delivers = [];
+
+        for (const deliverId of deliversIds) {
+            const deliverName = await Deliver.findOne({ where: { deliverId: deliverId } });
+            
+            const productsMap = {};
+            const deliverBatches = batches.filter(el => el.deliver === deliverId);
+            
+            for (const deliverBatch of deliverBatches) {
+                const productsBatch = await ItemBatch.findAll({ where: { batchId: deliverBatch.batchId } });
+                for (const elem of productsBatch) {
+                    if (productsMap[elem.name]) {
+                        productsMap[elem.name].quant += elem.quant;
+                        productsMap[elem.name].cost += elem.costPrice * elem.quant; // Обновляем стоимость
+                    } else {
+                        productsMap[elem.name] = {
+                            quant: elem.quant,
+                            cost: elem.costPrice * elem.quant // Устанавливаем стоимость
+                        };
+                    }
+                }
+            }
+            const products = Object.entries(productsMap).map(([name, { quant, cost }]) => ({ name, quant, cost })); // Возвращаем и cost
+            
+            delivers.push({ deliver: deliverName.name, products: products });
+        }
+
+        res.json(delivers);
+        
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 
 
 export const getAllItemsCheck = async (req, res) => {
@@ -764,18 +801,20 @@ export const restoreItemsCheck = async (req, res) => {
                             justification: checkItem.checkId.toString(),  accountFrom: null
                         }
                     });
-
-                    if (Number(accountingOffice.value) - Number(checkItem.salePrice) === 0) {
-                        await Accounting.destroy({
-                            where: { justification: checkItem.checkId.toString(),  accountFrom: null}
-                        });
-                    } else {
-                        await Accounting.update({
-                            value: Number(accountingOffice.value) - Number(checkItem.salePrice)
-                        },{
-                            where: { justification: checkItem.checkId.toString(),  accountFrom: null}
-                        });
+                    if (accountingOffice) {
+                         if (Number(accountingOffice.value) - Number(checkItem.salePrice) === 0) {
+                            await Accounting.destroy({
+                                where: { justification: checkItem.checkId.toString(),  accountFrom: null}
+                            });
+                        } else {
+                            await Accounting.update({
+                                value: Number(accountingOffice.value) - Number(checkItem.salePrice)
+                            },{
+                                where: { justification: checkItem.checkId.toString(),  accountFrom: null}
+                            });
+                        }
                     }
+                   
 
 
                     const accountOffice = await Accounts.findOne({

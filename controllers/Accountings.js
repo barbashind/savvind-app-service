@@ -6,7 +6,19 @@ export const accountingFilter = async (req, res) => {
     const user = req.user;
     try {
         const whereConditions = {};
-        if (user.role === 'SLR') {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const endOfToday = new Date(today);
+        endOfToday.setHours(23, 59, 59, 999);
+
+        if (user.role === 'SLR' || user.role === 'KUR') {
+            whereConditions.createdAt = {
+                [Op.gte]: today,
+                [Op.lte]: endOfToday,
+            };
+        }
+
+        if (user.role === 'SLR' || user.role === 'KUR') {
             whereConditions[Op.or] = [
                 { 
                     accountFrom: { [Op.like]: `Деньги в офисе`},
@@ -14,7 +26,7 @@ export const accountingFilter = async (req, res) => {
                 },
                 { 
                     accountFrom: null,
-                    accountTo: { [Op.like]: `Деньги в офисе` } 
+                    accountTo: { [Op.like]: `Деньги в офисе` },
                 }
             ];
         }
