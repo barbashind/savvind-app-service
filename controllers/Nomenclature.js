@@ -195,8 +195,22 @@ export const getNomenclatureById = async (req, res) => {
      
     export const createNomenclature = async (req, res) => {
         try {
+            const user = req.user;
             if (!req.body.name) {
                 const error = { advice: 'name', statusText: `Введите наименование`, status: 0,  timestamp: '0'};
+                return res.status(400).json({ error });
+            }
+            if (!req.body.EAN && user.role === 'KUR') {
+                const error = { advice: 'ean', statusText: `Введите EAN/UPC`, status: 0,  timestamp: '0'};
+                return res.status(400).json({ error });
+            }
+            const existingNomenclature = await Nomenclature.findOne({
+                where:
+                    { EAN: req.body.EAN }
+            });
+
+            if (existingNomenclature) {
+                const error = { advice: 'ean', statusText: 'Такой EAN/UPC уже существует', status: 0, timestamp: '0' };
                 return res.status(400).json({ error });
             }
 

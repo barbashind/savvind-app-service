@@ -75,6 +75,9 @@ const Nomenclature = db.define('nomenclature',{
     hasSerialNumber:{
         type: DataTypes.BOOLEAN
     },
+    EAN:{
+        type: DataTypes.STRING
+    },
 },{
     freezeTableName: true
 });
