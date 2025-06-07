@@ -51,7 +51,8 @@ export const nomenclatureFilter = async (req, res) => {
         if (req.body.searchText) {
             whereConditions[Op.or] = [
                 { name: { [Op.like]: `%${req.body.searchText}%`} },
-                { brand: { [Op.like]: `%${req.body.searchText}%` } }
+                { brand: { [Op.like]: `%${req.body.searchText}%` } },
+                { EAN: { [Op.like]: `%${req.body.searchText}%` } }
             ];
         }
         const orderBy = [];
