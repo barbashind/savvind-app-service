@@ -78,6 +78,9 @@ const Nomenclature = db.define('nomenclature',{
     EAN:{
         type: DataTypes.STRING
     },
+    // booked:{
+    //     type: DataTypes.INTEGER
+    // },
 },{
     freezeTableName: true
 });

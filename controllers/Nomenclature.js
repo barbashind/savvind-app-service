@@ -4,6 +4,7 @@ import ItemCheck from '../models/itemsCheckModel.js'
 import { Op } from "sequelize";
 import multer from 'multer';
 import ExcelJS from 'exceljs'
+import CheckType from "../models/checkModel.js";
  
 export const nomenclatureFilter = async (req, res) => {
     try {
@@ -75,9 +76,46 @@ export const nomenclatureFilter = async (req, res) => {
             offset: page * size,
         });
 
+        // Получаем все itemId из найденных записей
+        const itemIds = rows.map(row => row.itemId);
+
+        // Выполняем запрос для получения количества забронированных для каждого itemId
+        const bookedPromises = itemIds.map(async itemId => {
+            const salesRecords = await ItemCheck.findAll({
+                where: { itemId },
+            });
+
+            const bookedRecords = await Promise.all(salesRecords.map(async item => {
+                const checkType = await CheckType.findOne({
+                    where: { checkId: item.checkId },
+                });
+                // Возвращаем объект с элементом и значением isBooking
+                return { ...item, isBooking: checkType?.isBooking };
+            })).then(results => results.filter(item => item.isBooking));
+           
+           
+
+            return {
+                itemId,
+                booked: bookedRecords.length
+            };
+        });
+
+        // Ждем завершения всех запросов
+        const bookedResults = await Promise.all(bookedPromises);
+
+        // Формируем итоговый результат
+        const finalResults = rows.map(row => {
+            const bookedCount = bookedResults.find(result => result.itemId === row.itemId)?.booked || 0;
+            return {
+                ...row.dataValues,
+                booked: bookedCount
+            };
+        });
+
         // Формируем ответ в формате TPageableResponse
         const response = {
-            content: rows,
+            content: finalResults,
             pageable: {
                 sort: orderBy.length ? orderBy : null,
                 pageNumber: page,
