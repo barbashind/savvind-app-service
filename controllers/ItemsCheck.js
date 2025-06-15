@@ -47,7 +47,7 @@ export const getRevenueAndProfit = async (req, res) => {
                 // Рассчитываем revenue и margProfit
                 const revenue = Number(receipts.reduce((acc, receipt) => acc + parseFloat(receipt.salePrice), 0).toFixed(2));
                 const cost = Number(receipts.reduce((acc, receipt) => acc + parseFloat(receipt.costPrice), 0).toFixed(2));
-                const margProfit = Number((revenue - cost).toFixed(2)) ? Number((revenue - cost).toFixed(2)) : 0;
+                const margProfit = Number((revenue - cost).toFixed(2)) > 0 ? Number((revenue - cost).toFixed(2)) : 0;
 
                 results.push({ user, revenue, margProfit });
             } else {
@@ -113,7 +113,7 @@ export const getRevenueAndProfitGraph = async (req, res) => {
                     // Рассчитываем revenue и margProfit
                     const revenue = Number(receipts.reduce((acc, receipt) => acc + parseFloat(receipt.salePrice), 0).toFixed(2));
                     const cost = Number(receipts.reduce((acc, receipt) => acc + parseFloat(receipt.costPrice), 0).toFixed(2));
-                    const margProfit = Number((revenue - cost).toFixed(2)) ? Number((revenue - cost).toFixed(2)) : 0;
+                    const margProfit = Number((revenue - cost).toFixed(2)) > 0 ? Number((revenue - cost).toFixed(2)) : 0;
 
                     results.push({ user, date: currentDate, revenue, margProfit });
                 } else {
@@ -366,7 +366,12 @@ export const getDeliversAnalytics = async (req, res) => {
 
         for (const deliverId of deliversIds) {
             const deliverName = await Deliver.findOne({ where: { deliverId: deliverId } });
-            
+
+            // Проверка на существование deliverName
+            if (!deliverName) {
+                continue; // Пропускаем этот deliverId, если он не найден
+            }
+
             const productsMap = {};
             const deliverBatches = batches.filter(el => el.deliver === deliverId);
             
@@ -390,7 +395,6 @@ export const getDeliversAnalytics = async (req, res) => {
         }
 
         res.json(delivers);
-        
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
