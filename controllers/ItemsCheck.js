@@ -44,10 +44,11 @@ export const getRevenueAndProfit = async (req, res) => {
                     }
                 });
 
+                const filteredReceipts = receipts.filter(elem => Number(elem.salePrice) > Number(elem.costPrice));
                 // Рассчитываем revenue и margProfit
-                const revenue = Number(receipts.reduce((acc, receipt) => acc + parseFloat(receipt.salePrice), 0).toFixed(2));
-                const cost = Number(receipts.reduce((acc, receipt) => acc + parseFloat(receipt.costPrice), 0).toFixed(2));
-                const margProfit = Number((revenue - cost).toFixed(2)) > 0 ? Number((revenue - cost).toFixed(2)) : 0;
+                const revenue = Number(filteredReceipts.reduce((acc, receipt) => acc + parseFloat(receipt.salePrice), 0).toFixed(2));
+                const cost = Number(filteredReceipts.reduce((acc, receipt) => acc + parseFloat(receipt.costPrice), 0).toFixed(2));
+                const margProfit = Number((revenue - cost).toFixed(2)) ? Number((revenue - cost).toFixed(2)) : 0;
 
                 results.push({ user, revenue, margProfit });
             } else {
@@ -110,10 +111,12 @@ export const getRevenueAndProfitGraph = async (req, res) => {
                     }
                 });
 
+                const filteredReceipts = receipts.filter(elem => Number(elem.salePrice) > Number(elem.costPrice));
+
                     // Рассчитываем revenue и margProfit
-                    const revenue = Number(receipts.reduce((acc, receipt) => acc + parseFloat(receipt.salePrice), 0).toFixed(2));
-                    const cost = Number(receipts.reduce((acc, receipt) => acc + parseFloat(receipt.costPrice), 0).toFixed(2));
-                    const margProfit = Number((revenue - cost).toFixed(2)) > 0 ? Number((revenue - cost).toFixed(2)) : 0;
+                    const revenue = Number(filteredReceipts.reduce((acc, receipt) => acc + parseFloat(receipt.salePrice), 0).toFixed(2));
+                    const cost = Number(filteredReceipts.reduce((acc, receipt) => acc + parseFloat(receipt.costPrice), 0).toFixed(2));
+                    const margProfit = Number((revenue - cost).toFixed(2)) ? Number((revenue - cost).toFixed(2)) : 0;
 
                     results.push({ user, date: currentDate, revenue, margProfit });
                 } else {
