@@ -18,7 +18,7 @@ export const accountingFilter = async (req, res) => {
             };
         }
 
-        if (user.role === 'SLR' || user.role === 'KUR') {
+        if ((user.role === 'SLR' && user.username !== 'Matvei' ) || user.role === 'KUR') {
             whereConditions[Op.or] = [
                 { 
                     accountFrom: { [Op.like]: `Деньги в офисе`},
@@ -27,6 +27,26 @@ export const accountingFilter = async (req, res) => {
                 { 
                     accountFrom: null,
                     accountTo: { [Op.like]: `Деньги в офисе` },
+                }
+            ];
+        }
+        if (user.role === 'SLR' && user.username === 'Matvei' )  {
+            whereConditions[Op.or] = [
+                { 
+                    accountFrom: { [Op.like]: `Деньги в офисе`},
+                    accountTo: null,
+                },
+                { 
+                    accountFrom: null,
+                    accountTo: { [Op.like]: `Деньги в офисе` },
+                },
+                { 
+                    accountFrom: { [Op.like]: `Матвей РОП`},
+                    accountTo: null,
+                },
+                { 
+                    accountFrom: null,
+                    accountTo: { [Op.like]: `Матвей РОП` },
                 }
             ];
         }
