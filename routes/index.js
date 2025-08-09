@@ -20,7 +20,7 @@ import { createCheck, deleteCheck, getAllCheckes, getCheckById, getProductBySeri
 import { getAllDelivers } from "../controllers/Delivers.js";
 import { createItemsCheck, getAllItemsCheck, getAnalyticProd, getAssets, getDeliversAnalytics, getItemsCheckById, getItemsCheckBySerial, getItemsCheckToReturn, getRevenueAndProfit, getRevenueAndProfitGraph, restoreItemsCheck } from "../controllers/ItemsCheck.js";
 import { getAllContractors } from "../controllers/Contractors.js";
-import { accountingFilter, createAccounting, deleteAccounting, getAccountingById, updateAccounting } from "../controllers/Accountings.js";
+import { accountingFilter, createAccounting, deleteAccounting, getAccountingByBatch, getAccountingById, getAccountingByNewBatch, updateAccounting } from "../controllers/Accountings.js";
 import { deleteAccount, deleteCategory, deleteContractor, deleteCurrency, deleteDeliver, deleteUser, deleteWarehouse, getAllAccounts, getAllCategories, getAllCurrencies, getAllUsers, getAllWarehouses, updateAccounts, updateCategories, updateContractors, updateCurrencies, updateDelivers, updateUsers, updateWarehouses } from "../controllers/Settings.js";
  
 const router = express.Router();
@@ -97,6 +97,8 @@ router.get('/api/accounting/:id', authenticateToken, getAccountingById);
 router.post('/api/create-accounting', authenticateToken, createAccounting);
 router.post('/api/update-accounting/:id', authenticateToken, updateAccounting);
 router.delete('/api/delete-accounting/:id', authenticateToken, deleteAccounting);
+router.post('/api/accounting/find-by-batch', authenticateToken, getAccountingByBatch);
+router.post('/api/accounting/find-by-new-batch', authenticateToken, getAccountingByNewBatch);
 
 router.get('/api/accounts/all', authenticateToken, getAllAccounts);
 router.post('/api/update-accounts', authenticateToken, updateAccounts);

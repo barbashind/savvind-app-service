@@ -51,11 +51,50 @@ export const accountingFilter = async (req, res) => {
             ];
         }
 
-        if (req.body.searchText) {
-            whereConditions[Op.or] = [
-                { accountFrom: { [Op.like]: `%${req.body.searchText}%`} },
-                { accountTo: { [Op.like]: `%${req.body.searchText}%` } }
-            ];
+        if (req.body.accountFrom) {
+            whereConditions.accountFrom = 
+                { [Op.like]: `%${req.body.accountFrom}%`};
+        }
+
+        if (req.body.accountTo) {
+            whereConditions.accountTo = 
+                { [Op.like]: `%${req.body.accountTo}%`};
+        }
+
+         if (req.body.dateFrom && req.body.dateTo) {
+                whereConditions.createdAt = {
+                    [Op.gte]: req.body.dateFrom,
+                    [Op.lte]: req.body.dateTo
+                };
+            }
+
+        if (req.body.dateFrom && !req.body.dateTo) {
+            whereConditions.createdAt = {
+                [Op.gte]: req.body.dateFrom,
+            };
+        }
+        if (!req.body.dateFrom && req.body.dateTo) {
+            whereConditions.createdAt = {
+                [Op.lte]: req.body.dateTo
+            };
+        }
+
+        if (req.body.valueFrom && req.body.valueTo) {
+                whereConditions.value = {
+                    [Op.gte]: req.body.valueFrom,
+                    [Op.lte]: req.body.valueTo
+                };
+            }
+
+        if (req.body.valueFrom && !req.body.valueTo) {
+            whereConditions.value = {
+                [Op.gte]: req.body.valueFrom,
+            };
+        }
+        if (!req.body.valueFrom && req.body.valueTo) {
+            whereConditions.value = {
+                [Op.lte]: req.body.valueTo
+            };
         }
         const orderBy = [];
         if (req.query.sort) {
@@ -114,6 +153,36 @@ export const getAccountingById = async (req, res) => {
             }
         });
         res.json(accounting[0]);
+    } catch (error) {
+        res.json({ message: error.message });
+    }  
+}
+
+export const getAccountingByBatch = async (req, res) => {
+    try {
+        const accounting = await Accounting.findOne({
+            where: {
+                justification: req.body.batchId,
+                accountTo: req.body.accountTo,
+                category: 'Начисление по доставке'
+            }
+        });
+        res.json(accounting);
+    } catch (error) {
+        res.json({ message: error.message });
+    }  
+}
+
+export const getAccountingByNewBatch = async (req, res) => {
+    try {
+        const accounting = await Accounting.findOne({
+            where: {
+                justification: req.body.batchId,
+                accountTo: req.body.accountTo,
+                category: 'Начисление по закупке товара'
+            }
+        });
+        res.json(accounting);
     } catch (error) {
         res.json({ message: error.message });
     }  

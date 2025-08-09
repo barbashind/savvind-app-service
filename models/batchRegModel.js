@@ -24,6 +24,9 @@ const BatchReg = db.define('batches',{
     batchStatus:{
         type: DataTypes.STRING
     },
+    isCalculated:{
+        type: DataTypes.BOOLEAN
+    }
 
 },{
     freezeTableName: true

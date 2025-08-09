@@ -41,6 +41,9 @@ const Batch = db.define('batches',{
     },
     author: {
         type: DataTypes.STRING
+    },
+    isCalculated:{
+        type: DataTypes.BOOLEAN
     }
 },{
     freezeTableName: true
