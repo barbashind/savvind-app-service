@@ -61,6 +61,16 @@ export const accountingFilter = async (req, res) => {
                 { [Op.like]: `%${req.body.accountTo}%`};
         }
 
+        if (req.body.justification) {
+            whereConditions.justification = 
+                { [Op.like]: `%${req.body.justification}%`};
+        }
+        if (req.body.category && Array.isArray(req.body.category)) {
+            whereConditions.category = {
+                [Op.in]: req.body.category.map(cat => cat.name)
+            };
+        }
+
          if (req.body.dateFrom && req.body.dateTo) {
                 whereConditions.createdAt = {
                     [Op.gte]: req.body.dateFrom,
@@ -137,6 +147,144 @@ export const accountingFilter = async (req, res) => {
             sort: orderBy.length ? orderBy : null,
             totalElements: count,
             totalPages: Math.ceil(count / size),
+        };
+    res.json(response);
+
+    } catch (error) {
+        res.json({ message: error.message });
+    }  
+}
+
+export const accountingSumm = async (req, res) => {
+    const user = req.user;
+    try {
+        const whereConditions = {};
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const endOfToday = new Date(today);
+        endOfToday.setHours(23, 59, 59, 999);
+
+        if (user.role === 'SLR' || user.role === 'KUR') {
+            whereConditions.createdAt = {
+                [Op.gte]: today,
+                [Op.lte]: endOfToday,
+            };
+        }
+
+        if ((user.role === 'SLR' && user.username !== 'Matvei' ) || user.role === 'KUR') {
+            whereConditions[Op.or] = [
+                { 
+                    accountFrom: { [Op.like]: `Деньги в офисе`},
+                    accountTo: null,
+                },
+                { 
+                    accountFrom: null,
+                    accountTo: { [Op.like]: `Деньги в офисе` },
+                }
+            ];
+        }
+        if (user.role === 'SLR' && user.username === 'Matvei' )  {
+            whereConditions[Op.or] = [
+                { 
+                    accountFrom: { [Op.like]: `Деньги в офисе`},
+                    accountTo: null,
+                },
+                { 
+                    accountFrom: null,
+                    accountTo: { [Op.like]: `Деньги в офисе` },
+                },
+                { 
+                    accountFrom: { [Op.like]: `Матвей РОП`},
+                    accountTo: null,
+                },
+                { 
+                    accountFrom: null,
+                    accountTo: { [Op.like]: `Матвей РОП` },
+                }
+            ];
+        }
+
+        if (req.body.accountFrom) {
+            whereConditions.accountFrom = 
+                { [Op.like]: `%${req.body.accountFrom}%`};
+        }
+
+        if (req.body.accountTo) {
+            whereConditions.accountTo = 
+                { [Op.like]: `%${req.body.accountTo}%`};
+        }
+
+        if (req.body.justification) {
+            whereConditions.justification = 
+                { [Op.like]: `%${req.body.justification}%`};
+        }
+        if (req.body.category && Array.isArray(req.body.category)) {
+            whereConditions.category = {
+                [Op.in]: req.body.category.map(cat => cat.name)
+            };
+        }
+
+         if (req.body.dateFrom && req.body.dateTo) {
+                whereConditions.createdAt = {
+                    [Op.gte]: req.body.dateFrom,
+                    [Op.lte]: req.body.dateTo
+                };
+            }
+
+        if (req.body.dateFrom && !req.body.dateTo) {
+            whereConditions.createdAt = {
+                [Op.gte]: req.body.dateFrom,
+            };
+        }
+        if (!req.body.dateFrom && req.body.dateTo) {
+            whereConditions.createdAt = {
+                [Op.lte]: req.body.dateTo
+            };
+        }
+
+        if (req.body.valueFrom && req.body.valueTo) {
+                whereConditions.value = {
+                    [Op.gte]: req.body.valueFrom,
+                    [Op.lte]: req.body.valueTo
+                };
+            }
+
+        if (req.body.valueFrom && !req.body.valueTo) {
+            whereConditions.value = {
+                [Op.gte]: req.body.valueFrom,
+            };
+        }
+        if (!req.body.valueFrom && req.body.valueTo) {
+            whereConditions.value = {
+                [Op.lte]: req.body.valueTo
+            };
+        }
+        const orderBy = [];
+        if (req.query.sort) {
+            const sortParams = req.query.sort.split('&');
+            sortParams.forEach(param => {
+                const [fieldname, order] = param.split(',');
+                if (fieldname && order) {
+                    orderBy.push([fieldname, order]);
+                }
+            });
+        }
+        const page = parseInt(req.query.page) || 0; // Номер страницы (по умолчанию 0)
+        const size = parseInt(req.query.size) || 10; // Размер страницы (по умолчанию 10)
+        
+        const rows  = await Accounting.findAll({
+            where: whereConditions,
+        });
+
+        const rowsRUB = rows.filter(row => (row.currency === 'RUB'))
+        const rowsUSD = rows.filter(row => (row.currency === 'USD'))
+
+        const summRUB = rowsRUB.reduce((sum, row) => sum + row.value, 0);
+        const summUSD = rowsUSD.reduce((sum, row) => sum + row.value, 0);
+
+        const response = {
+            summRUB: summRUB,
+            summUSD: summUSD,
         };
     res.json(response);
 

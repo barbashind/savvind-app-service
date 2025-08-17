@@ -155,27 +155,40 @@ export const updateNomenclatureRemains = async (req, res) => {
     try {
         // Получаем все номенклатуры
         const rows = await Nomenclature.findAll();
+        console.log(req.body)
 
         for (const nomenclature of rows) {
                 if (nomenclature.hasSerialNumber) {
                     // Получение количества записей в items_batch с заполненным serialNumber и isSaled === false
-                    const count = await ItemBatch.count({
-                        where: {
-                            itemId: nomenclature.itemId,
-                            serialNumber: { [Op.ne]: null },
-                            [Op.or]: [
-                                { isSaled: false },
-                                { isSaled: null }
-                            ]
-                        }
-                    });
+                    const where = {
+                        itemId: nomenclature.itemId,
+                        serialNumber: { [Op.ne]: null },
+                        [Op.or]: [
+                            { isSaled: false },
+                            { isSaled: null }
+                        ]
+                    };
+
+                    if (Array.isArray(req.body) && req.body.length > 0) {
+                        where.warehouse = { [Op.in]: req.body.map(ware => ware.name) };
+                    }
+                    console.log(req.body);
+
+                    const count = await ItemBatch.count({ where });
                     nomenclature.remains = count;
     
                 } else {
+                    const where = {
+                        itemId: nomenclature.itemId,
+                    };
+                    console.log(req.body);
+
+                    if (Array.isArray(req.body) && req.body.length > 0) {
+                        where.warehouse = { [Op.in]: req.body.map(ware => ware.name) };
+                    }
+
                     // Получение суммы remainder у записей с таким же itemId
-                    const totalRemainder = await ItemBatch.sum('remainder', {
-                        where: { itemId: nomenclature.itemId }
-                    });
+                    const totalRemainder = await ItemBatch.sum('remainder', { where });
                     nomenclature.remains = totalRemainder || 0;
                 }
             

@@ -20,7 +20,7 @@ import { createCheck, deleteCheck, getAllCheckes, getCheckById, getProductBySeri
 import { getAllDelivers } from "../controllers/Delivers.js";
 import { createItemsCheck, getAllItemsCheck, getAnalyticProd, getAssets, getDeliversAnalytics, getItemsCheckById, getItemsCheckBySerial, getItemsCheckToReturn, getRevenueAndProfit, getRevenueAndProfitGraph, restoreItemsCheck } from "../controllers/ItemsCheck.js";
 import { getAllContractors } from "../controllers/Contractors.js";
-import { accountingFilter, createAccounting, deleteAccounting, getAccountingByBatch, getAccountingById, getAccountingByNewBatch, updateAccounting } from "../controllers/Accountings.js";
+import { accountingFilter, accountingSumm, createAccounting, deleteAccounting, getAccountingByBatch, getAccountingById, getAccountingByNewBatch, updateAccounting } from "../controllers/Accountings.js";
 import { deleteAccount, deleteCategory, deleteContractor, deleteCurrency, deleteDeliver, deleteUser, deleteWarehouse, getAllAccounts, getAllCategories, getAllCurrencies, getAllUsers, getAllWarehouses, updateAccounts, updateCategories, updateContractors, updateCurrencies, updateDelivers, updateUsers, updateWarehouses } from "../controllers/Settings.js";
  
 const router = express.Router();
@@ -48,7 +48,7 @@ router.get('/api/nomenclature/:itemId', authenticateToken, getNomenclatureById);
 router.post('/api/create-nomenclature', authenticateToken, createNomenclature);
 router.post('/api/upload-nomenclature', authenticateToken, getProductsFile);
 router.post('/api/update-nomenclature/:itemId', authenticateToken, updateNomenclature);
-router.get('/api/update-nomenclature/remains', authenticateToken, updateNomenclatureRemains);
+router.post('/api/update-nomenclature-remains', authenticateToken, updateNomenclatureRemains);
 router.delete('/api/delete-nomenclature/:itemId', authenticateToken, deleteNomenclature);
 
 router.get('/api/productType/all', authenticateToken, getAllProductTypes);
@@ -93,6 +93,7 @@ router.delete('/api/check-delete/:checkId', authenticateToken, deleteCheck);
 router.delete('/api/check-items-delete/:checkId', authenticateToken, restoreItemsCheck);
 
 router.post('/api/accounting/filter', authenticateToken, accountingFilter);
+router.post('/api/accounting/summs', authenticateToken, accountingSumm);
 router.get('/api/accounting/:id', authenticateToken, getAccountingById);
 router.post('/api/create-accounting', authenticateToken, createAccounting);
 router.post('/api/update-accounting/:id', authenticateToken, updateAccounting);
