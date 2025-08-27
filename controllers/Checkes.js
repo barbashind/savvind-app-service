@@ -233,27 +233,36 @@ export const createCheck = async (req, res) => {
         }
 
         if ( !req.body.isBooking && !req.body.isUnpaid) {
-        const accountingOfice = {
-            accountFrom: null,
-                accountTo: req.body.account,
-                value: req.body.summ,
-                category: 'Продажа товара',
-                form: null,
-                justification: createdCheck.checkId,
-        }
-        await Accounting.create(accountingOfice)
+            const existingAccounting = await Accounting.findOne({
+                where: {
+                    justification: createdCheck.checkId,
+                    category: 'Продажа товара'
+                }
+            });
 
-        const accountOffice = await Accounts.findOne({
+            if (!existingAccounting) {
+                const accountingOffice = {
+                    accountFrom: null,
+                    accountTo: req.body.account,
+                    value: req.body.summ,
+                    category: 'Продажа товара',
+                    form: null,
+                    justification: createdCheck.checkId,
+                }
+                await Accounting.create(accountingOffice);
+                const accountOffice = await Accounts.findOne({
                                 where: {
                                    name: req.body.account
                                 }
                             });
         
-        await Accounts.update({
-            value: Number(accountOffice.value) + Number(req.body.summ)
-        },{
-            where: { name: req.body.account}
-        });
+                await Accounts.update({
+                    value: Number(accountOffice.value) + Number(req.body.summ)
+                },{
+                    where: { name: req.body.account}
+                });
+
+            }
         }
 
 
