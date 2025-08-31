@@ -421,3 +421,31 @@ export const deleteCheck = async (req, res) => {
         res.json({ message: error.message });
     }  
 }
+
+
+export const getSalesDebt = async (req, res) => {
+  try {
+    const records = await CheckType.findAll({
+      attributes: ['summ', 'isUnpaid', 'isBooking']
+    });
+
+    // Если нет записей — вернуть нули
+    if (!records || records.length === 0) {
+      return res.json({ isUnpaid: 0, isBooked: 0 });
+    }
+
+    // Суммируем
+    let isUnpaid = 0;
+    let isBooked = 0;
+
+    for (const r of records) {
+      const summ = Number(r.get ? r.get('summ') : r.summ) || 0;
+      if (r.get ? r.get('isUnpaid') : r.isUnpaid) isUnpaid += summ;
+      if (r.get ? r.get('isBooking') : r.isBooked) isBooked += summ;
+    }
+
+    return res.json({ isUnpaid, isBooked });
+  } catch (error) {
+    return res.json({ message: error.message });
+  }
+};

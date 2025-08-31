@@ -10,7 +10,7 @@ export const getAllAccounts = async (req, res) => {
         if (user.role === 'SLR' && user.username !== 'Matvei') {
             accountsData.push(...accounts.filter((el) => (el.name === 'Деньги в офисе')))
         } else if (user.username === 'Matvei') {
-            accountsData.push(...accounts.filter((el) => (el.name === 'Деньги в офисе' || el.name === 'Матвей РОП')))
+            accountsData.push(...accounts.filter((el) => (el.name === 'Деньги в офисе' || el.name === 'Матвей РОП' || el.name === 'Матвей Старцев' || el.name === 'USDT Саша')))
         } else {
             accountsData.push(...accounts) 
         }

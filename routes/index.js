@@ -16,7 +16,7 @@ import { createProductType, deleteProductType, getAllProductTypes, getProductTyp
 import { createBatch, deleteBatch, getBatchById, getBatchByNumber, purchaseFilter, updateBatch } from "../controllers/Batches.js";
 import { changeWarehouseItem, changeWarehouseItemSerialNum, createItemsBatch, deleteItemBatch, deleteItemsBatch, getItemsBatchById, getItemsBatchByNumber, getItemsBatchFilter, getItemsBatchForReturn, getItemsBatchRegById, returnItemBatch, updateItemsBatch } from "../controllers/ItemsBatch.js";
 import { getAllBatchesReg, getBatchRegById } from "../controllers/BatchesReg.js";
-import { createCheck, deleteCheck, getAllCheckes, getCheckById, getProductBySerialNumber, updateCheck } from "../controllers/Checkes.js";
+import { createCheck, deleteCheck, getAllCheckes, getCheckById, getProductBySerialNumber, getSalesDebt, updateCheck } from "../controllers/Checkes.js";
 import { getAllDelivers } from "../controllers/Delivers.js";
 import { createItemsCheck, getAllItemsCheck, getAnalyticProd, getAssets, getDeliversAnalytics, getItemsCheckById, getItemsCheckBySerial, getItemsCheckToReturn, getRevenueAndProfit, getRevenueAndProfitGraph, restoreItemsCheck } from "../controllers/ItemsCheck.js";
 import { getAllContractors } from "../controllers/Contractors.js";
@@ -91,6 +91,7 @@ router.post('/api/create-items-check', authenticateToken, createItemsCheck);
 router.get('/api/product-by-serial/:serialNumber', authenticateToken, getProductBySerialNumber);
 router.delete('/api/check-delete/:checkId', authenticateToken, deleteCheck);
 router.delete('/api/check-items-delete/:checkId', authenticateToken, restoreItemsCheck);
+router.get('/api/sales-dept', authenticateToken, getSalesDebt);
 
 router.post('/api/accounting/filter', authenticateToken, accountingFilter);
 router.post('/api/accounting/summs', authenticateToken, accountingSumm);

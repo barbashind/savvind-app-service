@@ -10,10 +10,18 @@ export const accountingFilter = async (req, res) => {
         today.setHours(0, 0, 0, 0);
         const endOfToday = new Date(today);
         endOfToday.setHours(23, 59, 59, 999);
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(startOfWeek.getDate() - 7);
 
-        if (user.role === 'SLR' || user.role === 'KUR') {
+        if (user.role === 'SLR'  && user.username !== 'Matvei' || user.role === 'KUR') {
             whereConditions.createdAt = {
                 [Op.gte]: today,
+                [Op.lte]: endOfToday,
+            };
+        }
+        if (user.role === 'SLR' && user.username === 'Matvei') {
+            whereConditions.createdAt = {
+                [Op.gte]: startOfWeek,
                 [Op.lte]: endOfToday,
             };
         }
@@ -163,10 +171,18 @@ export const accountingSumm = async (req, res) => {
         today.setHours(0, 0, 0, 0);
         const endOfToday = new Date(today);
         endOfToday.setHours(23, 59, 59, 999);
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(startOfWeek.getDate() - 7);
 
-        if (user.role === 'SLR' || user.role === 'KUR') {
+        if (user.role === 'SLR'  && user.username !== 'Matvei' || user.role === 'KUR') {
             whereConditions.createdAt = {
                 [Op.gte]: today,
+                [Op.lte]: endOfToday,
+            };
+        }
+        if (user.role === 'SLR' && user.username === 'Matvei') {
+            whereConditions.createdAt = {
+                [Op.gte]: startOfWeek,
                 [Op.lte]: endOfToday,
             };
         }
