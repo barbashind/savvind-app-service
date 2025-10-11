@@ -12,4 +12,11 @@ const db = new Sequelize('savvin_db', 'savvind', 'Rhbcnbyf2001!@', {
     port: 3306,
 });
  
+// export default db;
+// const db = new Sequelize('savvin_copy_db', 'savvind', 'Rhbcnbyf2001!@', {
+//     host: "78.107.239.94",
+//     dialect: "mysql",
+//     port: 3306,
+// });
+ 
 export default db;

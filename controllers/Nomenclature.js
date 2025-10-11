@@ -386,21 +386,26 @@ export const getNomenclatureById = async (req, res) => {
 
     export const getItemsStatById = async (req, res) => {
         const itemId = req.params.itemId; 
-    
         try {
+            const formatDate = (date) => {
+                const d = new Date(date);
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                return `${day}.${month}.${year}`;
+            };
             const items = await ItemCheck.findAll({
                 where: {
                     itemId: itemId 
                 }
             });
             const salledAll = items?.length;
-            const dates = [...new Set(items.map(item => item.createdAt))];
-
+            const dates = [...new Set(items.map(item => formatDate(item.createdAt)))];
 
             const sales = dates.map( date => ({
-                serialNumbers: items?.filter(item => (item.createdAt === date))?.map(elem => elem.serialNumber),
+                serialNumbers: items?.filter(item => (formatDate(item.createdAt) === date))?.map(elem => elem.serialNumber),
                 date: date,
-                saled: items?.filter(item => (item.createdAt === date))?.length,
+                saled: items?.filter(item => (formatDate(item.createdAt) === date))?.length,
             }))
 
             const dataStat = {

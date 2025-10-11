@@ -18,7 +18,7 @@ import { changeWarehouseItem, changeWarehouseItemSerialNum, createItemsBatch, de
 import { getAllBatchesReg, getBatchRegById } from "../controllers/BatchesReg.js";
 import { createCheck, deleteCheck, getAllCheckes, getCheckById, getProductBySerialNumber, getSalesDebt, updateCheck } from "../controllers/Checkes.js";
 import { getAllDelivers } from "../controllers/Delivers.js";
-import { createItemsCheck, getAllItemsCheck, getAnalyticProd, getAssets, getDeliversAnalytics, getItemsCheckById, getItemsCheckBySerial, getItemsCheckToReturn, getRevenueAndProfit, getRevenueAndProfitGraph, restoreItemsCheck } from "../controllers/ItemsCheck.js";
+import { createItemsCheck, getAllItemsCheck, getAnalyticProd, getAssets, getDeliversAnalytics, getItemsCheckById, getItemsCheckBySerial, getItemsCheckToReturn, getRevenueAndProfit, getRevenueAndProfitGraph, restoreItemsCheck, updatePriceItemsCheck } from "../controllers/ItemsCheck.js";
 import { getAllContractors } from "../controllers/Contractors.js";
 import { accountingFilter, accountingSumm, createAccounting, deleteAccounting, getAccountingByBatch, getAccountingById, getAccountingByNewBatch, updateAccounting } from "../controllers/Accountings.js";
 import { deleteAccount, deleteCategory, deleteContractor, deleteCurrency, deleteDeliver, deleteUser, deleteWarehouse, getAllAccounts, getAllCategories, getAllCurrencies, getAllUsers, getAllWarehouses, updateAccounts, updateCategories, updateContractors, updateCurrencies, updateDelivers, updateUsers, updateWarehouses } from "../controllers/Settings.js";
@@ -87,6 +87,7 @@ router.get('/api/sales-by-serial/:serialNumber', authenticateToken, getItemsChec
 router.get('/api/sales-by-id/:checkId', authenticateToken, getItemsCheckById);
 router.post('/api/create-check', authenticateToken, createCheck);
 router.post('/api/update-check/:checkId', authenticateToken, updateCheck);
+router.post('/api/update-price', authenticateToken, updatePriceItemsCheck);
 router.post('/api/create-items-check', authenticateToken, createItemsCheck);
 router.get('/api/product-by-serial/:serialNumber', authenticateToken, getProductBySerialNumber);
 router.delete('/api/check-delete/:checkId', authenticateToken, deleteCheck);

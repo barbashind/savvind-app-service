@@ -14,7 +14,7 @@ export const getAllCheckes = async (req, res) => {
         twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
 
        
-        if (user.role === 'SLR' || user.role === 'KUR') {
+        if ((user.role === 'SLR' && req.body.isPaid) || (user.role === 'KUR' && req.body.isPaid)) {
             whereConditions.createdAt = {
                 [Op.gt]: twoWeeksAgo 
             };

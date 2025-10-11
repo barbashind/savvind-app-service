@@ -566,6 +566,39 @@ export const getItemsCheckBySerial = async (req, res) => {
         res.json({ message: error.message });
     }  
 }
+
+export const updatePriceItemsCheck = async (req, res) => {
+    try {
+        const saleId = req.body.saleId;
+        const checkId = req.body.checkId;
+        const newPrice = req.body.salePrice;
+
+        if (!saleId || !checkId || newPrice === undefined) {
+            return res.status(400).json({ message: 'itemId, checkId и newPrice обязательны' });
+        }
+
+        // Найти позицию по itemId и checkId
+        const itemCheck = await ItemCheck.findOne({
+            where: {
+                saleId: saleId,
+                checkId: checkId
+            }
+        });
+
+        if (!itemCheck) {
+            return res.status(404).json({ message: 'Позиция не найдена' });
+        }
+
+        // Обновить цену
+        itemCheck.salePrice = newPrice;
+        await itemCheck.save();
+
+        res.json({ message: 'Цена обновлена', itemCheck });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
  
 export const createItemsCheck = async (req, res) => {
     try {
