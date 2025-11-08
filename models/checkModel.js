@@ -33,6 +33,9 @@ const CheckType = db.define('receipts',{
     account:{
         type: DataTypes.STRING
     },
+    session:{
+        type: DataTypes.STRING
+    },
     createdAt:{
         type: DataTypes.DATE
     },

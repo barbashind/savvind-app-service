@@ -1,9 +1,10 @@
 import CheckType from '../models/checkModel.js';
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import ItemCheck from '../models/itemsCheckModel.js';
 import ItemBatch from '../models/itemsBatchModel.js';
 import Accounting from '../models/accountingModel.js';
 import { Accounts } from '../models/settingsModel.js';
+import AccountsStory from '../models/accountsStoryModel.js';
  
 export const getAllCheckes = async (req, res) => {
     try {
@@ -137,6 +138,54 @@ export const getCheckById = async (req, res) => {
             }
         });
         res.json(check[0]);
+    } catch (error) {
+        res.json({ message: error.message });
+    }  
+}
+
+export const openCheckById = async (req, res) => {
+    const user = req.user;
+    const username = user.username;
+    try {
+        const check = await CheckType.findOne({
+            where: {
+                checkId: req.params.checkId
+            }
+        });
+
+        if (check) {
+            // Обновляем поля session и openedAt
+            await check.update({
+                session: username,
+                openedAt: new Date()
+            });
+            res.json(check);
+        } else {
+            res.status(404).json({ message: 'Чек не найден' });
+        }
+    } catch (error) {
+        res.json({ message: error.message });
+    }  
+}
+
+export const closeCheckById = async (req, res) => {
+    try {
+        const check = await CheckType.findOne({
+            where: {
+                checkId: req.params.checkId
+            }
+        });
+
+        if (check) {
+            // Обнуляем поле session
+            await check.update({
+                session: null,
+                openedAt: null // Можно также обнулить время открытия, если нужно
+            });
+            res.json({ message: 'Чек закрыт успешно' });
+        } else {
+            res.status(404).json({ message: 'Чек не найден' });
+        }
     } catch (error) {
         res.json({ message: error.message });
     }  
@@ -449,3 +498,73 @@ export const getSalesDebt = async (req, res) => {
     return res.json({ message: error.message });
   }
 };
+
+export const accountsStoryFilter = async (req, res) => {
+    try {
+        let whereConditions = {};
+        if (req.body.table_name) {
+            whereConditions.table_name = {
+                    [Op.like]: `%${req.body.table_name}%`
+                };
+        }
+        if (req.body.onlyReturn) {
+            whereConditions = {
+                ...whereConditions,
+                [Op.and]: [
+                    {
+                        [Op.or]: [
+                            { new_value: 0 },
+                            { remainder_old: { [Op.lt]: Sequelize.col('remainder_new') } }
+                        ]
+                    }
+                ]
+            };
+        }
+        const orderBy = [];
+        if (req.query.sort) {
+            const sortParams = req.query.sort.split('&');
+            sortParams.forEach(param => {
+                const [fieldname, order] = param.split(',');
+                if (fieldname && order) {
+                    orderBy.push([fieldname, order]);
+                }
+            });
+        }
+        const page = parseInt(req.query.page) || 0; // Номер страницы (по умолчанию 0)
+        const size = parseInt(req.query.size) || 10; // Размер страницы (по умолчанию 10)
+        
+        const { count, rows } = await AccountsStory.findAndCountAll({
+            where: whereConditions,
+            order: orderBy.length ? orderBy : null,
+            limit: size,
+            offset: page * size,
+        });
+
+        
+        // Формируем ответ в формате TPageableResponse
+        const response = {
+            content: rows,
+            pageable: {
+                sort: orderBy.length ? orderBy : null,
+                pageNumber: page,
+                pageSize: size,
+                paged: true,
+                unpaged: false,
+            },
+            dataHide: false,
+            empty: rows.length === 0,
+            first: page === 0,
+            last: page >= Math.ceil(count / size) - 1,
+            number: page,
+            numberOfElements: rows.length,
+            size: size,
+            sort: orderBy.length ? orderBy : null,
+            totalElements: count,
+            totalPages: Math.ceil(count / size),
+        };
+    res.json(response);
+
+    } catch (error) {
+        res.json({ message: error.message });
+    }  
+}

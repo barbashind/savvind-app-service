@@ -16,7 +16,7 @@ import { createProductType, deleteProductType, getAllProductTypes, getProductTyp
 import { createBatch, deleteBatch, getBatchById, getBatchByNumber, purchaseFilter, updateBatch } from "../controllers/Batches.js";
 import { changeWarehouseItem, changeWarehouseItemSerialNum, createItemsBatch, deleteItemBatch, deleteItemsBatch, getItemsBatchById, getItemsBatchByNumber, getItemsBatchFilter, getItemsBatchForReturn, getItemsBatchRegById, returnItemBatch, updateItemsBatch } from "../controllers/ItemsBatch.js";
 import { getAllBatchesReg, getBatchRegById } from "../controllers/BatchesReg.js";
-import { createCheck, deleteCheck, getAllCheckes, getCheckById, getProductBySerialNumber, getSalesDebt, updateCheck } from "../controllers/Checkes.js";
+import { accountsStoryFilter, createCheck, deleteCheck, getAllCheckes, getCheckById, getProductBySerialNumber, getSalesDebt, updateCheck } from "../controllers/Checkes.js";
 import { getAllDelivers } from "../controllers/Delivers.js";
 import { createItemsCheck, getAllItemsCheck, getAnalyticProd, getAssets, getDeliversAnalytics, getItemsCheckById, getItemsCheckBySerial, getItemsCheckToReturn, getRevenueAndProfit, getRevenueAndProfitGraph, restoreItemsCheck, updatePriceItemsCheck } from "../controllers/ItemsCheck.js";
 import { getAllContractors } from "../controllers/Contractors.js";
@@ -140,5 +140,8 @@ router.post('/api/analytic-prod/filter', authenticateToken, getAnalyticProd);
 router.get('/api/analytic-delivers', authenticateToken, getDeliversAnalytics);
 
 router.get('/api/nomenclature-stat/:itemId', authenticateToken, getItemsStatById);
+
+
+router.post('/api/history/filter', authenticateToken, accountsStoryFilter);
 
 export default router;
