@@ -7,7 +7,7 @@ import { Sequelize } from "sequelize";
 // });
 
 const db = new Sequelize('savvin_db', 'savvind', 'Rhbcnbyf2001!@', {
-    host: "5.45.86.236",
+    host: "78.107.239.94",
     dialect: "mysql",
     port: 3306,
 });
